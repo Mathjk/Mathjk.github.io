@@ -3,17 +3,25 @@
     {
       "id": "gpu-dashboard",
       "title": "GPU Dashboard",
-      "description": "启动 /home/jk/gpu-dashboard/start.sh，然后打开本地 GPU 控制台。",
+      "description": "Linux/WSL 端启动 /home/jk/gpu-dashboard/start.sh，然后打开本地 GPU 控制台。",
       "kind": "web",
       "url": "http://127.0.0.1:8765/",
       "port": 8765,
-      "openDelaySeconds": 1,
+      "openDelaySeconds": 2,
       "tags": [
         "Local Web",
         "GPU",
         "Port 8765"
       ],
       "launch": {
+        "windows": {
+          "command": [
+            "wsl.exe",
+            "bash",
+            "-lc",
+            "cd /home/jk/gpu-dashboard && ./start.sh"
+          ]
+        },
         "linux": {
           "command": [
             "./start.sh"
@@ -31,7 +39,7 @@
         "linux": "http://127.0.0.1/",
         "windows": "http://127.0.0.1:8080/"
       },
-      "openDelaySeconds": 3,
+      "openDelaySeconds": 6,
       "tags": [
         "Local Web",
         "Overleaf",
@@ -39,6 +47,16 @@
         "Port 8080"
       ],
       "launch": {
+        "windows": {
+          "command": [
+            "powershell.exe",
+            "-NoProfile",
+            "-ExecutionPolicy",
+            "Bypass",
+            "-Command",
+            "$p = (wsl.exe wslpath -w /home/jk/overleaf/windows-launcher/Start-Overleaf-Tunnel-Key.cmd).Trim(); Start-Process -FilePath $p"
+          ]
+        },
         "linux": {
           "command": [
             "bin/up",

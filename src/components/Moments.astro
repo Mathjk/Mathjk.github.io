@@ -1,0 +1,138 @@
+---
+import { siteConfig } from "../config";
+
+const moments = siteConfig.moments;
+const hasMoments = moments && moments.counters && moments.counters.length > 0;
+---
+
+{
+  hasMoments && (
+    <section id="moments" class="p-8 sm:p-12 md:p-16 lg:p-24">
+      <div class="grid grid-cols-1 items-start gap-8 lg:grid-cols-12 lg:gap-16">
+        <div class="lg:col-span-4">
+          <h2 class="text-3xl font-bold text-gray-900 sm:text-4xl md:text-5xl xl:text-7xl">
+            时光
+          </h2>
+          <div
+            class="mt-2 h-[5px] w-[75px] rounded-full"
+            style={`background-color: ${siteConfig.accentColor}`}
+          />
+          <p class="mt-6 max-w-sm text-base leading-7 text-gray-500">
+            {moments.note}
+          </p>
+        </div>
+
+        <div class="lg:col-span-8">
+          <div class="grid grid-cols-1 gap-5 md:grid-cols-3">
+            <div
+              class="relative overflow-hidden rounded-2xl border border-gray-200 bg-gray-950 p-6 text-white shadow-sm md:col-span-3"
+              style={`--accent-color: ${siteConfig.accentColor}`}
+            >
+              <div class="absolute -right-10 -top-16 h-48 w-48 rounded-full bg-white/10 blur-2xl"></div>
+              <div class="relative flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <p class="font-mono text-xs font-semibold uppercase tracking-[0.24em] text-white/50">
+                    {moments.timeZoneLabel}
+                  </p>
+                  <p
+                    id="momentClockTime"
+                    data-timezone={moments.timeZone}
+                    class="mt-4 font-mono text-5xl font-bold tracking-tight sm:text-6xl"
+                  >
+                    00:00:00
+                  </p>
+                </div>
+                <p id="momentClockDate" class="text-base leading-7 text-white/65 sm:text-right">
+                  Loading...
+                </p>
+              </div>
+            </div>
+
+            {moments.counters.map((counter) => (
+              <article
+                class="min-h-44 rounded-2xl border border-gray-200 bg-gray-50 p-5 transition-all duration-300 hover:-translate-y-1 hover:border-gray-300 hover:bg-white hover:shadow-xl"
+                data-moment-counter
+                data-start={counter.startDate}
+                data-inclusive={counter.inclusive ? "true" : "false"}
+              >
+                <div class="flex h-full flex-col justify-between gap-6">
+                  <div>
+                    <p
+                      class="font-mono text-xs font-semibold uppercase tracking-[0.2em]"
+                      style={`color: ${siteConfig.accentColor}`}
+                    >
+                      {counter.tone}
+                    </p>
+                    <h3 class="mt-3 text-lg font-bold leading-snug text-gray-900 sm:text-xl">
+                      {counter.label}
+                    </h3>
+                  </div>
+
+                  <div class="flex items-end justify-between gap-4">
+                    <span class="font-mono text-4xl font-bold leading-none text-gray-950" data-moment-value>
+                      0
+                    </span>
+                    <span class="rounded-md bg-gray-900 px-2.5 py-1 font-mono text-xs font-medium text-white">
+                      {counter.unit}
+                    </span>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+<script>
+  const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+  function getChinaStartOfDay(dateText) {
+    return new Date(`${dateText}T00:00:00+08:00`);
+  }
+
+  function updateMomentClock() {
+    const timeNode = document.getElementById("momentClockTime");
+    const dateNode = document.getElementById("momentClockDate");
+    if (!timeNode || !dateNode) return;
+
+    const timeZone = timeNode.dataset.timezone || "Asia/Shanghai";
+    const now = new Date();
+
+    timeNode.textContent = new Intl.DateTimeFormat("zh-CN", {
+      timeZone,
+      hour12: false,
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    }).format(now);
+
+    dateNode.textContent = new Intl.DateTimeFormat("zh-CN", {
+      timeZone,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      weekday: "long",
+    }).format(now);
+  }
+
+  function updateMomentCounters() {
+    const now = new Date();
+    document.querySelectorAll("[data-moment-counter]").forEach((card) => {
+      const start = card.getAttribute("data-start");
+      const valueNode = card.querySelector("[data-moment-value]");
+      if (!start || !valueNode) return;
+
+      const inclusive = card.getAttribute("data-inclusive") === "true";
+      const days = Math.floor((now.getTime() - getChinaStartOfDay(start).getTime()) / MS_PER_DAY);
+      valueNode.textContent = String(Math.max(0, days + (inclusive ? 1 : 0)));
+    });
+  }
+
+  updateMomentClock();
+  updateMomentCounters();
+  setInterval(updateMomentClock, 1000);
+  setInterval(updateMomentCounters, 60 * 1000);
+</script>

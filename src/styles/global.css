@@ -1,5 +1,72 @@
 @import "tailwindcss";
 
 body {
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: "Noto Serif SC", "Songti SC", "SimSun", serif;
+  background: #fff;
+}
+
+.font-mono {
+  font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.prose-note p {
+  margin: 1.25rem 0;
+}
+
+.prose-note a {
+  color: #2563eb;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.theme-dark body {
+  background: #0b1120;
+  color: #dbe4f0;
+}
+
+.theme-dark .bg-white {
+  background-color: #111827 !important;
+}
+
+.theme-dark .bg-gray-50,
+.theme-dark .bg-gray-100 {
+  background-color: #0f172a !important;
+}
+
+.theme-dark .text-gray-900,
+.theme-dark .text-gray-800,
+.theme-dark .text-gray-700 {
+  color: #e5edf7 !important;
+}
+
+.theme-dark .text-gray-600,
+.theme-dark .text-gray-500 {
+  color: #9aa8bc !important;
+}
+
+.theme-dark .border-gray-100,
+.theme-dark .border-gray-200,
+.theme-dark .border-gray-300,
+.theme-dark .ring-gray-200 {
+  border-color: #263244 !important;
+  --tw-ring-color: #263244 !important;
+}
+
+.theme-dark input,
+.theme-dark textarea,
+.theme-dark select {
+  background-color: #0b1120 !important;
+  border-color: #263244 !important;
+  color: #e5edf7 !important;
+}
+
+.theme-dark input::placeholder,
+.theme-dark textarea::placeholder {
+  color: #64748b !important;
+}
+
+.theme-dark #themeToggle {
+  background-color: #111827 !important;
+  border-color: #334155 !important;
+  color: #e5edf7 !important;
 }

@@ -1,0 +1,23 @@
+<button
+  id="themeToggle"
+  type="button"
+  class="fixed bottom-5 right-5 z-50 flex h-11 w-11 items-center justify-center rounded-full border border-gray-200 bg-white font-mono text-xs font-bold text-gray-800 shadow-sm transition-colors hover:border-gray-300"
+  aria-label="Toggle theme"
+>
+  ◐
+</button>
+
+<script is:inline>
+  const applyTheme = (theme) => {
+    document.documentElement.classList.toggle("theme-dark", theme === "dark");
+    localStorage.setItem("myweb.theme", theme);
+  };
+
+  const savedTheme = localStorage.getItem("myweb.theme");
+  const preferredTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  applyTheme(savedTheme || preferredTheme);
+
+  document.getElementById("themeToggle")?.addEventListener("click", () => {
+    applyTheme(document.documentElement.classList.contains("theme-dark") ? "light" : "dark");
+  });
+</script>

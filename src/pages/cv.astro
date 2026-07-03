@@ -1,0 +1,46 @@
+---
+import { siteConfig } from "../config";
+import "../styles/global.css";
+import ThemeToggle from "../components/ThemeToggle.astro";
+
+const cv = siteConfig.cv;
+---
+
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>CV - {siteConfig.name}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Noto+Serif+SC:wght@400;500;600;700;900&display=swap" rel="stylesheet" />
+  </head>
+  <body>
+    <main class="mx-auto max-w-5xl px-8 py-16 sm:px-12 md:py-24">
+      <a href="/" class="font-mono text-sm text-gray-500 transition-colors hover:text-gray-900">← 返回主页</a>
+      <h1 class="mt-10 text-5xl font-black tracking-tight text-gray-900 sm:text-7xl">CV</h1>
+      <p class="mt-6 max-w-3xl text-lg leading-8 text-gray-600">{cv.summary}</p>
+
+      <section class="mt-12 rounded-2xl border border-gray-200 bg-gray-50 p-6">
+        <h2 class="text-2xl font-bold text-gray-900">Highlights</h2>
+        <div class="mt-5 flex flex-wrap gap-2">
+          {cv.highlights.map((item) => (
+            <span class="rounded-md bg-gray-900 px-3 py-1.5 font-mono text-xs font-medium text-white">{item}</span>
+          ))}
+        </div>
+      </section>
+
+      <section class="mt-8 grid grid-cols-1 gap-8 md:grid-cols-2">
+        <div class="rounded-2xl border border-gray-200 bg-gray-50 p-6">
+          <h2 class="text-2xl font-bold text-gray-900">Education</h2>
+          <p class="mt-4 text-base leading-7 text-gray-600">待补充。</p>
+        </div>
+        <div class="rounded-2xl border border-gray-200 bg-gray-50 p-6">
+          <h2 class="text-2xl font-bold text-gray-900">Experience</h2>
+          <p class="mt-4 text-base leading-7 text-gray-600">待补充。</p>
+        </div>
+      </section>
+    </main>
+    <ThemeToggle />
+  </body>
+</html>

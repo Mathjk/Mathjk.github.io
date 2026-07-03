@@ -1,0 +1,121 @@
+[
+  {
+    "id": "homepage-video",
+    "name": "个人主页与视频入口",
+    "description": "当前公开身份入口，后续可以扩展为个人介绍、数学笔记、视频内容和项目归档。",
+    "links": [
+      {
+        "label": "Bilibili",
+        "href": "https://space.bilibili.com/393071145"
+      }
+    ],
+    "skills": [
+      "Homepage",
+      "Bilibili"
+    ]
+  },
+  {
+    "id": "paper-discovery",
+    "name": "数学论文检索",
+    "description": "面向数学与相关方向的论文检索、分类浏览、学术平台与文献网络工具。",
+    "links": [
+      {
+        "label": "arXiv",
+        "href": "https://arxiv.org/"
+      },
+      {
+        "label": "zbMATH",
+        "href": "https://zbmath.org/classification/"
+      },
+      {
+        "label": "Google Scholar",
+        "href": "https://scholar.google.com/"
+      },
+      {
+        "label": "Connected Papers",
+        "href": "https://www.connectedpapers.com/"
+      },
+      {
+        "label": "X-MOL",
+        "href": "https://www.x-mol.com/"
+      },
+      {
+        "label": "alphaxiv",
+        "href": "https://alphaxiv.org/"
+      }
+    ],
+    "skills": [
+      "Research",
+      "Papers",
+      "Math"
+    ]
+  },
+  {
+    "id": "math-problems",
+    "name": "数学题库与解题社区",
+    "description": "收集 Putnam、AMM、AoPS、Math StackExchange 等适合长期查题、刷题、追踪经典问题的入口。",
+    "links": [
+      {
+        "label": "Putnam Archive",
+        "href": "https://kskedlaya.org/putnam-archive/"
+      },
+      {
+        "label": "AMM Problems",
+        "href": "https://www.mat.uniroma2.it/~tauraso/AMM/amm.html"
+      },
+      {
+        "label": "AoPS",
+        "href": "https://artofproblemsolving.com/"
+      },
+      {
+        "label": "Math StackExchange",
+        "href": "https://math.stackexchange.com/"
+      },
+      {
+        "label": "Brilliant",
+        "href": "https://brilliant.org"
+      }
+    ],
+    "skills": [
+      "Problems",
+      "Community",
+      "Training"
+    ]
+  },
+  {
+    "id": "ai-search",
+    "name": "AI 与搜索工作台",
+    "description": "保留常用的 AI 助手、搜索引擎和知识入口。原站里包含凭据或私有通道的链接没有迁移到公开页面。",
+    "links": [
+      {
+        "label": "ChatGPT",
+        "href": "https://openai.com/chatgpt"
+      },
+      {
+        "label": "Kimi",
+        "href": "https://kimi.moonshot.cn/"
+      },
+      {
+        "label": "通义千问",
+        "href": "https://tongyi.aliyun.com/qianwen/"
+      },
+      {
+        "label": "秘塔 AI",
+        "href": "https://metaso.cn/"
+      },
+      {
+        "label": "Google",
+        "href": "https://www.google.com/"
+      },
+      {
+        "label": "Wikipedia",
+        "href": "https://www.wikipedia.org/"
+      }
+    ],
+    "skills": [
+      "AI",
+      "Search",
+      "Knowledge"
+    ]
+  }
+]

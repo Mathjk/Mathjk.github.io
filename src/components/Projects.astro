@@ -1,104 +1,334 @@
 ---
 import { siteConfig } from "../config";
+
 const hasProjects = siteConfig.projects && siteConfig.projects.length > 0;
+const bridgeUrl = siteConfig.localWorkbench?.bridgeUrl ?? "http://127.0.0.1:3939";
 ---
 
 {
   hasProjects && (
-    <section id="projects" class="p-8 sm:p-12 md:p-16 lg:p-24">
+    <section
+      id="projects"
+      class="p-8 sm:p-12 md:p-16 lg:p-24"
+      data-bridge-url={bridgeUrl}
+      style={`--accent-color: ${siteConfig.accentColor}`}
+    >
       <div>
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 items-start">
+        <div class="grid grid-cols-1 items-start gap-8 lg:grid-cols-12 lg:gap-16">
           <div class="lg:col-span-4">
-            <h2 class="text-3xl sm:text-4xl md:text-5xl xl:text-7xl font-bold text-gray-900">
-              Projects
+            <h2 class="text-3xl font-bold text-gray-900 sm:text-4xl md:text-5xl xl:text-7xl">
+              精选资源
             </h2>
             <div
-              class="w-[75px] h-[5px] mt-2 rounded-full"
+              class="mt-2 h-[5px] w-[75px] rounded-full"
               style={`background-color: ${siteConfig.accentColor}`}
             />
+            <p class="mt-6 max-w-sm text-base leading-7 text-gray-500">
+              从旧导航页迁移来的公开资源。内部入口、带密码说明的链接和本地路径暂时没有放到这里。
+            </p>
+
+            <div class="mt-6 rounded-2xl border border-gray-200 bg-gray-50 p-4">
+              <p class="font-mono text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">
+                Local Edit
+              </p>
+              <p id="resourceEditorStatus" class="mt-3 text-sm leading-7 text-gray-600">
+                线上只读。本机桥接服务解锁后可以新增或删除资源，并写回 src/data/resources.json。
+              </p>
+              <form id="resourceUnlockForm" class="mt-4 flex flex-col gap-2">
+                <input
+                  id="resourceToken"
+                  type="password"
+                  autocomplete="off"
+                  placeholder="本地编辑 token"
+                  class="rounded-lg border border-gray-200 bg-white px-3 py-2 font-mono text-xs text-gray-700 outline-none focus:border-gray-400"
+                />
+                <button
+                  type="submit"
+                  class="rounded-lg bg-gray-900 px-3 py-2 font-mono text-xs font-semibold text-white transition-colors hover:bg-gray-700"
+                >
+                  解锁编辑
+                </button>
+              </form>
+            </div>
           </div>
 
           <div class="lg:col-span-8">
-            <div class="space-y-8">
-              {siteConfig.projects.map((project, index) => {
-                const Component = project.link ? "a" : "div";
-                const linkProps = project.link
-                  ? {
-                      href: project.link,
-                      target: "_blank",
-                      rel: "noopener noreferrer",
-                    }
-                  : {};
+            <div id="resourceEditorPanel" class="mb-7 hidden rounded-2xl border border-gray-200 bg-white p-5 shadow-sm sm:p-6">
+              <div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <p class="font-mono text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">
+                    Add Resource
+                  </p>
+                  <h3 class="mt-2 text-2xl font-bold text-gray-900">新增快捷资源</h3>
+                </div>
+                <p class="text-sm text-gray-500">保存后会写入本地 JSON 文件。</p>
+              </div>
 
-                return (
-                  <div class="group relative">
-                    <Component
-                      {...linkProps}
-                      class={`block relative p-4 sm:p-6 md:p-8 bg-gray-50 rounded-xl sm:rounded-2xl border border-gray-200 transition-all duration-300 ${
-                        project.link
-                          ? "hover:bg-white hover:shadow-xl hover:border-gray-300 hover:-translate-y-1"
-                          : ""
-                      }`}
-                    >
-                      {project.link && (
-                        <div class="absolute top-4 right-4 sm:top-6 sm:right-6 md:top-8 md:right-8 w-10 h-10 sm:w-11 sm:h-11 md:w-12 md:h-12 flex items-center justify-center bg-gray-900 rounded-full text-white transition-all duration-300 group-hover:bg-gray-700">
-                          <svg
-                            class="w-4 h-4 sm:w-4.5 sm:h-4.5 md:w-5 md:h-5 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                              stroke-width="2"
-                              d="M7 17L17 7M17 7H7M17 7V17"
-                            />
-                          </svg>
-                        </div>
-                      )}
-
-                      <div class="space-y-4">
-                        <div>
-                          <span
-                            class="text-sm font-mono"
-                            style={{ color: siteConfig.accentColor }}
-                          >
-                            0{index + 1}
-                          </span>
-                          <h3 class="text-xl sm:text-2xl font-bold text-gray-900 mt-1">
-                            {project.name}
-                          </h3>
-                        </div>
-
-                        <p
-                          class={`text-base sm:text-lg text-gray-600 leading-relaxed ${project.link ? "pr-12 sm:pr-14 md:pr-16" : ""}`}
-                        >
-                          {project.description}
-                        </p>
-
-                        {project.skills && project.skills.length > 0 && (
-                          <div class="flex flex-wrap gap-1.5 sm:gap-2 pt-2">
-                            {project.skills.map((skill) => (
-                              <span
-                                class={`px-2.5 sm:px-3 py-1 sm:py-1.5 bg-gray-900 text-white rounded-md sm:rounded-lg text-xs sm:text-sm font-medium transition-all duration-300 ${
-                                  project.link ? "group-hover:bg-gray-800" : ""
-                                }`}
-                              >
-                                {skill}
-                              </span>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </Component>
-                  </div>
-                );
-              })}
+              <form id="resourceForm" class="mt-5 grid grid-cols-1 gap-3">
+                <input name="name" required placeholder="分组名称，例如：数学工具" class="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none focus:border-gray-400" />
+                <textarea name="description" rows="2" placeholder="一句描述" class="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none focus:border-gray-400"></textarea>
+                <textarea name="links" rows="4" placeholder="每行一个链接：名称 | https://example.com" class="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 font-mono text-xs outline-none focus:border-gray-400"></textarea>
+                <input name="skills" placeholder="标签，用逗号分隔，例如：Math, Tools" class="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none focus:border-gray-400" />
+                <button type="submit" class="justify-self-start rounded-lg bg-gray-900 px-4 py-2 font-mono text-xs font-semibold text-white transition-colors hover:bg-gray-700">
+                  保存资源
+                </button>
+              </form>
             </div>
+
+            <div class="mb-7 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm sm:p-6">
+              <p class="font-mono text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">
+                Search Resources
+              </p>
+              <input
+                id="resourceSearch"
+                type="search"
+                placeholder="搜索资源、标签或链接..."
+                class="mt-4 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none focus:border-gray-400"
+              />
+              <div id="resourceFilters" class="mt-4 flex flex-wrap gap-2"></div>
+            </div>
+
+            <div id="resourceList" class="space-y-7"></div>
           </div>
         </div>
       </div>
+      <script id="resourceSeed" type="application/json" set:html={JSON.stringify(siteConfig.projects)} />
     </section>
   )
 }
+
+<script>
+  const resourceRoot = document.getElementById("projects");
+  const resourceList = document.getElementById("resourceList");
+  const resourceSeed = document.getElementById("resourceSeed");
+  const resourceStatus = document.getElementById("resourceEditorStatus");
+  const resourceUnlockForm = document.getElementById("resourceUnlockForm");
+  const resourceTokenInput = document.getElementById("resourceToken");
+  const resourceEditorPanel = document.getElementById("resourceEditorPanel");
+  const resourceForm = document.getElementById("resourceForm");
+  const resourceSearch = document.getElementById("resourceSearch");
+  const resourceFilters = document.getElementById("resourceFilters");
+  const resourceBridgeUrl = resourceRoot?.dataset.bridgeUrl || "http://127.0.0.1:3939";
+  const editorTokenKey = "myweb.editorToken";
+  let resourceItems = JSON.parse(resourceSeed?.textContent || "[]");
+  let resourceEditorUnlocked = false;
+  let activeResourceTag = "all";
+
+  function escapeHtml(value) {
+    return String(value || "").replace(/[&<>"']/g, (char) => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;",
+    })[char]);
+  }
+
+  function getEditorToken() {
+    return localStorage.getItem(editorTokenKey) || "";
+  }
+
+  function setResourceStatus(message) {
+    if (resourceStatus) resourceStatus.textContent = message;
+  }
+
+  async function editorRequest(path, options = {}) {
+    const headers = new Headers(options.headers || {});
+    const token = getEditorToken();
+    if (token) headers.set("X-MyWeb-Token", token);
+    if (options.body && !headers.has("Content-Type")) {
+      headers.set("Content-Type", "application/json");
+    }
+    const response = await fetch(`${resourceBridgeUrl}${path}`, { ...options, headers });
+    const data = await response.json();
+    if (!response.ok || !data.ok) {
+      throw new Error(data.error || `HTTP ${response.status}`);
+    }
+    return data;
+  }
+
+  function getResourceTags(items) {
+    const tags = new Set();
+    items.forEach((item) => (item.skills || []).forEach((skill) => tags.add(skill)));
+    return ["all", ...Array.from(tags).sort()];
+  }
+
+  function renderResourceFilters(items) {
+    if (!resourceFilters) return;
+    resourceFilters.innerHTML = getResourceTags(items).map((tag) => `
+      <button
+        type="button"
+        data-resource-filter="${escapeHtml(tag)}"
+        class="rounded-full border px-3 py-1.5 font-mono text-xs font-semibold transition-colors ${
+          activeResourceTag === tag ? "border-gray-900 bg-gray-900 text-white" : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
+        }"
+      >
+        ${tag === "all" ? "全部" : escapeHtml(tag)}
+      </button>
+    `).join("");
+  }
+
+  function getFilteredResources() {
+    const query = String(resourceSearch?.value || "").trim().toLowerCase();
+    return resourceItems.filter((item) => {
+      const text = [
+        item.name,
+        item.description,
+        ...(item.skills || []),
+        ...(item.links || []).flatMap((link) => [link.label, link.href]),
+      ].join(" ").toLowerCase();
+      const matchesQuery = !query || text.includes(query);
+      const matchesTag = activeResourceTag === "all" || (item.skills || []).includes(activeResourceTag);
+      return matchesQuery && matchesTag;
+    });
+  }
+
+  function renderResources(items, preserveFilters = false) {
+    if (!resourceList) return;
+    resourceItems = items || [];
+    if (!preserveFilters && activeResourceTag !== "all" && !getResourceTags(resourceItems).includes(activeResourceTag)) {
+      activeResourceTag = "all";
+    }
+    renderResourceFilters(resourceItems);
+    const visibleItems = getFilteredResources();
+    resourceList.innerHTML = visibleItems.map((project, index) => {
+      const links = project.links || [];
+      const linkHtml = links.map((link) => `
+        <a
+          href="${escapeHtml(link.href)}"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 font-mono text-xs font-semibold text-gray-700 transition-colors duration-200 hover:border-gray-300 hover:text-[var(--accent-color)]"
+        >
+          ${escapeHtml(link.label)}
+          <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 17L17 7M17 7H7M17 7V17"></path>
+          </svg>
+        </a>
+      `).join("");
+      const skills = (project.skills || []).map((skill) => `
+        <span class="rounded-md bg-gray-900 px-2.5 py-1 text-xs font-medium text-white transition-all duration-300 group-hover:bg-gray-800 sm:rounded-lg sm:px-3 sm:py-1.5 sm:text-sm">${escapeHtml(skill)}</span>
+      `).join("");
+      const deleteButton = resourceEditorUnlocked
+        ? `<button type="button" data-resource-delete="${escapeHtml(project.id)}" class="absolute right-5 top-5 rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 font-mono text-[11px] font-semibold text-gray-600 transition-colors hover:border-rose-200 hover:text-rose-700">删除</button>`
+        : "";
+
+      return `
+        <article class="group relative rounded-2xl border border-gray-200 bg-gray-50 p-5 transition-all duration-300 hover:-translate-y-1 hover:border-gray-300 hover:bg-white hover:shadow-xl sm:p-6 md:p-8">
+          ${deleteButton}
+          <div class="space-y-5 ${resourceEditorUnlocked ? "pr-14" : ""}">
+            <div>
+              <span class="font-mono text-sm" style="color: var(--accent-color)">${String(index + 1).padStart(2, "0")}</span>
+              <h3 class="mt-1 text-xl font-bold text-gray-900 sm:text-2xl">${escapeHtml(project.name)}</h3>
+            </div>
+            <p class="text-base leading-relaxed text-gray-600 sm:text-lg">${escapeHtml(project.description)}</p>
+            ${links.length ? `<div class="flex flex-wrap gap-2 pt-1">${linkHtml}</div>` : ""}
+            ${skills ? `<div class="flex flex-wrap gap-1.5 pt-2 sm:gap-2">${skills}</div>` : ""}
+          </div>
+        </article>
+      `;
+    }).join("");
+  }
+
+  resourceSearch?.addEventListener("input", () => renderResources(resourceItems, true));
+  resourceFilters?.addEventListener("click", (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLElement)) return;
+    const button = target.closest("[data-resource-filter]");
+    if (!button) return;
+    activeResourceTag = button.getAttribute("data-resource-filter") || "all";
+    renderResources(resourceItems, true);
+  });
+
+  async function loadEditorState() {
+    const token = getEditorToken();
+    if (resourceTokenInput) resourceTokenInput.value = token;
+    resourceEditorUnlocked = false;
+    resourceEditorPanel?.classList.add("hidden");
+    renderResources(resourceItems);
+
+    try {
+      const state = await editorRequest("/api/editor/state");
+      if (state.authenticated) {
+        resourceEditorUnlocked = true;
+        resourceEditorPanel?.classList.remove("hidden");
+        setResourceStatus(`已解锁，本地写入：${state.resourcesPath}`);
+        const payload = await editorRequest("/api/editor/resources");
+        renderResources(payload.resources || resourceItems);
+      } else {
+        resourceEditorUnlocked = false;
+        resourceEditorPanel?.classList.add("hidden");
+        setResourceStatus("检测到本地桥接服务。输入 token 后可编辑，线上访客保持只读。");
+        renderResources(resourceItems);
+      }
+    } catch {
+      resourceEditorUnlocked = false;
+      resourceEditorPanel?.classList.add("hidden");
+      setResourceStatus("未连接本地桥接服务。GitHub Pages 或外部访问会保持只读。");
+      renderResources(resourceItems);
+    }
+  }
+
+  resourceUnlockForm?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const token = resourceTokenInput?.value?.trim();
+    if (!token) return;
+    localStorage.setItem(editorTokenKey, token);
+    window.dispatchEvent(new Event("myweb-token-updated"));
+    await loadEditorState();
+  });
+
+  resourceForm?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const form = new FormData(resourceForm);
+    const links = String(form.get("links") || "")
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .map((line) => {
+        const [label, ...hrefParts] = line.split("|");
+        return { label: label.trim(), href: hrefParts.join("|").trim() };
+      });
+
+    const payload = {
+      name: String(form.get("name") || "").trim(),
+      description: String(form.get("description") || "").trim(),
+      links,
+      skills: String(form.get("skills") || "").trim(),
+    };
+
+    try {
+      const data = await editorRequest("/api/editor/resources", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
+      resourceForm.reset();
+      renderResources(data.resources || []);
+      setResourceStatus("资源已保存到 src/data/resources.json。");
+    } catch (error) {
+      alert(`保存失败：${error.message}`);
+    }
+  });
+
+  resourceList?.addEventListener("click", async (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLElement)) return;
+    const button = target.closest("[data-resource-delete]");
+    if (!button) return;
+    const id = button.getAttribute("data-resource-delete");
+    if (!id || !confirm("删除这个资源分组？")) return;
+
+    try {
+      const data = await editorRequest(`/api/editor/resources?id=${encodeURIComponent(id)}`, {
+        method: "DELETE",
+      });
+      renderResources(data.resources || []);
+      setResourceStatus("资源已从 JSON 删除。");
+    } catch (error) {
+      alert(`删除失败：${error.message}`);
+    }
+  });
+
+  loadEditorState();
+  window.addEventListener("myweb-token-updated", loadEditorState);
+</script>

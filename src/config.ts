@@ -1,92 +1,76 @@
+import resources from "./data/resources.json";
+import publicProjects from "./data/public-projects.json";
+import timeline from "./data/timeline.json";
+import cv from "./data/cv.json";
+
 export const siteConfig = {
-  name: "Ryan Fitzgerald",
-  title: "Senior Software Engineer",
-  description: "Portfolio website of Ryan Fitzgerald",
-  accentColor: "#1d4ed8",
+  name: "收集mathのフリーレン",
+  heroNameLines: ["收集math", "のフリーレン"],
+  title: "Mathematics, papers, tools, and small experiments.",
+  description:
+    "收集mathのフリーレン的个人主页：整理数学资源、论文检索入口、AI 工具与自用效率工具。",
+  accentColor: "#2563eb",
+  avatar: "/avatar.jpg",
   social: {
-    email: "your-email@example.com",
-    linkedin: "https://linkedin.com/in/yourprofile",
-    twitter: "https://x.com/rfitzio",
-    github: "https://github.com/RyanFitzgerald",
+    bilibili: "https://space.bilibili.com/393071145",
+  },
+  moments: {
+    timeZone: "Asia/Shanghai",
+    timeZoneLabel: "Shanghai",
+    note: "旧主页里最有个人气味的部分：时间、纪念日、长期陪伴的计数。",
+    counters: [
+      {
+        label: "我们恋爱了",
+        startDate: "2025-06-01",
+        unit: "Days",
+        inclusive: true,
+        tone: "love",
+      },
+      {
+        label: "我来到这个世界",
+        startDate: "2002-07-21",
+        unit: "天",
+        inclusive: false,
+        tone: "self",
+      },
+      {
+        label: "Baby 来到这个世界",
+        startDate: "2001-10-09",
+        unit: "天",
+        inclusive: false,
+        tone: "baby",
+      },
+    ],
+  },
+  localWorkbench: {
+    bridgeUrl: "http://127.0.0.1:3939",
+    note: "本地工具台通过一个只监听 127.0.0.1 的桥接服务启动本机程序、后台脚本和本地网页。",
+    startCommands: [
+      "Windows: start_local_app_server.bat",
+      "Linux/macOS: ./start_local_app_server.sh",
+    ],
   },
   aboutMe:
-    "Lorem ipsum dolor sit amet, consectetur adipisicing elit. Rem quos asperiores nihil consequatur tempore cupiditate architecto natus commodi corrupti quas quasi facere est, dignissimos odit nam veniam sapiente ut, vitae eligendi ipsum dolor, nostrum ullam impedit! Corrupti ratione mollitia temporibus necessitatibus, consectetur reiciendis recusandae id, dolorum quaerat, vero pariatur. Ratione!",
-  skills: ["Javascript", "React", "Node.js", "Python", "AWS", "Docker"],
-  projects: [
-    {
-      name: "AI Dev Roundup Newsletter",
-      description:
-        "One concise email. Five minutes. Every Tuesday. Essential AI news & trends, production-ready libraries, powerful AI tools, and real-world code examples",
-      link: "https://aidevroundup.com/?ref=devportfolio",
-      skills: ["React", "Node.js", "AWS"],
-    },
-    {
-      name: "Chrome Extension Mastery: Build Full-Stack Extensions with React & Node.js",
-      description:
-        "Master the art of building production-ready, full-stack Chrome Extensions using modern web technologies and best practices",
-      link: "https://fullstackextensions.com/?ref=devportfolio",
-      skills: ["React", "Node.js", "AWS"],
-    },
-    {
-      name: "ExtensionKit",
-      description:
-        "Kit to jump-start your Chrome extension projects with a variety of battle-tested starter templates & examples",
-      link: "https://extensionkit.io/?ref=devportfolio",
-      skills: ["React", "Node.js", "AWS"],
-    },
+    "这里会从原来的个人导航页逐步迁移成更克制的个人主页。当前先保留最核心的公开信息：数学资源、论文检索入口、AI 工具和自用小工具。后续可以继续补充研究方向、项目经历、论文笔记、教育背景和联系方式。",
+  skills: [
+    "Mathematics",
+    "Approximation Theory",
+    "Paper Discovery",
+    "LaTeX",
+    "AI Tools",
+    "Local Utilities",
   ],
-  experience: [
-    {
-      company: "Tech Company",
-      title: "Senior Software Engineer",
-      dateRange: "Jan 2022 - Present",
-      bullets: [
-        "Led development of microservices architecture serving 1M+ users",
-        "Reduced API response times by 40% through optimization",
-        "Mentored team of 5 junior developers",
-      ],
-    },
-    {
-      company: "Startup Inc",
-      title: "Full Stack Developer",
-      dateRange: "Jun 2020 - Dec 2021",
-      bullets: [
-        "Built and launched MVP product from scratch using React and Node.js",
-        "Implemented CI/CD pipeline reducing deployment time by 60%",
-        "Collaborated with product team to define technical requirements",
-      ],
-    },
-    {
-      company: "Digital Agency",
-      title: "Frontend Developer",
-      dateRange: "Aug 2018 - May 2020",
-      bullets: [
-        "Developed responsive web applications for 20+ clients",
-        "Improved site performance scores by 35% on average",
-        "Introduced modern JavaScript frameworks to legacy codebases",
-      ],
-    },
-  ],
-  education: [
-    {
-      school: "University Name",
-      degree: "Bachelor of Science in Computer Science",
-      dateRange: "2014 - 2018",
-      achievements: [
-        "Graduated Magna Cum Laude with 3.8 GPA",
-        "Dean's List all semesters",
-        "President of Computer Science Club",
-      ],
-    },
-    {
-      school: "Online Platform",
-      degree: "Full Stack Development Certificate",
-      dateRange: "2019",
-      achievements: [
-        "Completed 500+ hours of coursework",
-        "Built 10+ portfolio projects",
-        "Specialized in React and Node.js",
-      ],
-    },
-  ],
+  projects: resources,
+  publicProjects,
+  timeline,
+  cv,
+  notes: {
+    title: "笔记",
+    description: "数学、论文、工具和主页迭代的短笔记。后续可以直接新增 Markdown 文件。",
+  },
+  localEditor: {
+    note: "本地编辑中心只在 127.0.0.1 桥接服务解锁后工作。线上发布时保持只读。",
+  },
+  experience: [],
+  education: [],
 };

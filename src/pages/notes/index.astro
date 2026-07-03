@@ -1,0 +1,52 @@
+---
+import { siteConfig } from "../../config";
+import "../../styles/global.css";
+import ThemeToggle from "../../components/ThemeToggle.astro";
+
+const noteModules = import.meta.glob("../../content/notes/*.md", { eager: true });
+const notes = Object.entries(noteModules)
+  .map(([path, module]) => {
+    const mod = module as { frontmatter?: Record<string, unknown> };
+    const slug = path.split("/").pop()?.replace(/\.md$/, "") ?? "";
+    return {
+      slug,
+      title: String(mod.frontmatter?.title ?? slug),
+      date: String(mod.frontmatter?.date ?? ""),
+      summary: String(mod.frontmatter?.summary ?? ""),
+      tags: Array.isArray(mod.frontmatter?.tags) ? mod.frontmatter?.tags as string[] : [],
+    };
+  })
+  .sort((a, b) => b.date.localeCompare(a.date));
+---
+
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>笔记 - {siteConfig.name}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Noto+Serif+SC:wght@400;500;600;700;900&display=swap" rel="stylesheet" />
+  </head>
+  <body>
+    <main class="mx-auto max-w-5xl px-8 py-16 sm:px-12 md:py-24">
+      <a href="/" class="font-mono text-sm text-gray-500 transition-colors hover:text-gray-900">← 返回主页</a>
+      <h1 class="mt-10 text-5xl font-black tracking-tight text-gray-900 sm:text-7xl">笔记</h1>
+      <p class="mt-6 max-w-2xl text-lg leading-8 text-gray-600">{siteConfig.notes.description}</p>
+
+      <div class="mt-12 space-y-7">
+        {notes.map((note) => (
+          <a href={`/notes/${note.slug}`} class="block rounded-2xl border border-gray-200 bg-gray-50 p-6 transition-all duration-300 hover:-translate-y-1 hover:bg-white hover:shadow-xl">
+            <p class="font-mono text-xs font-semibold uppercase tracking-[0.2em]" style={`color: ${siteConfig.accentColor}`}>{note.date}</p>
+            <h2 class="mt-3 text-2xl font-bold text-gray-900">{note.title}</h2>
+            <p class="mt-3 text-base leading-7 text-gray-600">{note.summary}</p>
+            <div class="mt-5 flex flex-wrap gap-2">
+              {note.tags.map((tag) => <span class="rounded-md bg-gray-900 px-2.5 py-1 font-mono text-xs font-medium text-white">{tag}</span>)}
+            </div>
+          </a>
+        ))}
+      </div>
+    </main>
+    <ThemeToggle />
+  </body>
+</html>

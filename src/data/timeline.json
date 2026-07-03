@@ -1,0 +1,23 @@
+[
+  {
+    "id": "homepage-astro",
+    "date": "2026-07-03",
+    "title": "迁移到 DevPortfolio / Astro",
+    "description": "以 RyanFitzgerald/devportfolio 为基础，重做个人主页结构和视觉风格。",
+    "tags": ["Homepage", "Astro"]
+  },
+  {
+    "id": "moments",
+    "date": "2026-07-03",
+    "title": "保留时光计数",
+    "description": "把旧主页里的上海时间、恋爱天数、出生天数等个人化模块按新风格重做。",
+    "tags": ["Moments"]
+  },
+  {
+    "id": "local-workbench",
+    "date": "2026-07-03",
+    "title": "本地工具台上线",
+    "description": "通过 127.0.0.1 桥接服务启动本地程序、后台脚本和本地网页服务。",
+    "tags": ["Local Tools"]
+  }
+]

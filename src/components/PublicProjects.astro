@@ -1,0 +1,52 @@
+---
+import { siteConfig } from "../config";
+
+const projects = siteConfig.publicProjects ?? [];
+---
+
+{
+  projects.length > 0 && (
+    <section id="public-projects" class="p-8 sm:p-12 md:p-16 lg:p-24">
+      <div class="grid grid-cols-1 items-start gap-8 lg:grid-cols-12 lg:gap-16">
+        <div class="lg:col-span-4">
+          <h2 class="text-3xl font-bold text-gray-900 sm:text-4xl md:text-5xl xl:text-7xl">
+            公开项目
+          </h2>
+          <div
+            class="mt-2 h-[5px] w-[75px] rounded-full"
+            style={`background-color: ${siteConfig.accentColor}`}
+          />
+          <p class="mt-6 max-w-sm text-base leading-7 text-gray-500">
+            从本地工具逐步沉淀出来的公开项目展示位。内容可以后续继续补截图、文档和下载链接。
+          </p>
+        </div>
+
+        <div class="lg:col-span-8">
+          <div class="space-y-7">
+            {projects.map((project, index) => (
+              <article class="group rounded-2xl border border-gray-200 bg-gray-50 p-5 transition-all duration-300 hover:-translate-y-1 hover:border-gray-300 hover:bg-white hover:shadow-xl sm:p-6 md:p-8">
+                <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <span class="font-mono text-sm" style={{ color: siteConfig.accentColor }}>
+                      {String(index + 1).padStart(2, "0")}
+                    </span>
+                    <h3 class="mt-1 text-xl font-bold text-gray-900 sm:text-2xl">{project.name}</h3>
+                  </div>
+                  <span class="self-start rounded-full bg-white px-3 py-1.5 font-mono text-xs font-semibold text-gray-600 ring-1 ring-gray-200">
+                    {project.status}
+                  </span>
+                </div>
+                <p class="mt-4 text-base leading-relaxed text-gray-600">{project.description}</p>
+                <div class="mt-5 flex flex-wrap gap-2">
+                  {project.skills.map((skill) => (
+                    <span class="rounded-md bg-gray-900 px-2.5 py-1 text-xs font-medium text-white sm:px-3 sm:py-1.5 sm:text-sm">{skill}</span>
+                  ))}
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}

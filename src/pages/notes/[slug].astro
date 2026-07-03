@@ -1,0 +1,42 @@
+---
+import "../../styles/global.css";
+import { siteConfig } from "../../config";
+import ThemeToggle from "../../components/ThemeToggle.astro";
+
+export async function getStaticPaths() {
+  const modules = import.meta.glob("../../content/notes/*.md", { eager: true });
+  return Object.entries(modules).map(([path, module]) => ({
+    params: { slug: path.split("/").pop()?.replace(/\.md$/, "") },
+    props: { module },
+  }));
+}
+
+const { module } = Astro.props as { module: { frontmatter: Record<string, unknown>; Content: any } };
+const { Content } = module;
+const frontmatter = module.frontmatter;
+---
+
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>{frontmatter.title} - {siteConfig.name}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Noto+Serif+SC:wght@400;500;600;700;900&display=swap" rel="stylesheet" />
+  </head>
+  <body>
+    <main class="mx-auto max-w-3xl px-8 py-16 sm:px-12 md:py-24">
+      <a href="/notes" class="font-mono text-sm text-gray-500 transition-colors hover:text-gray-900">← 返回笔记</a>
+      <p class="mt-10 font-mono text-xs font-semibold uppercase tracking-[0.2em]" style={`color: ${siteConfig.accentColor}`}>
+        {frontmatter.date}
+      </p>
+      <h1 class="mt-4 text-4xl font-black tracking-tight text-gray-900 sm:text-6xl">{frontmatter.title}</h1>
+      <p class="mt-6 text-lg leading-8 text-gray-600">{frontmatter.summary}</p>
+      <article class="prose-note mt-12 text-lg leading-9 text-gray-700">
+        <Content />
+      </article>
+    </main>
+    <ThemeToggle />
+  </body>
+</html>

@@ -1,16 +1,23 @@
 ---
 import Header from "../components/Header.astro";
 import Hero from "../components/Hero.astro";
+import Moments from "../components/Moments.astro";
+import LocalWorkbench from "../components/LocalWorkbench.astro";
+import LocalEditorCenter from "../components/LocalEditorCenter.astro";
+import NotesPreview from "../components/NotesPreview.astro";
+import Timeline from "../components/Timeline.astro";
 import About from "../components/About.astro";
+import PublicProjects from "../components/PublicProjects.astro";
 import Projects from "../components/Projects.astro";
 import Experience from "../components/Experience.astro";
 import Education from "../components/Education.astro";
 import Footer from "../components/Footer.astro";
+import ThemeToggle from "../components/ThemeToggle.astro";
 import { siteConfig } from "../config";
 import "../styles/global.css";
 ---
 
-<html lang="en">
+<html lang="zh-CN">
   <head>
     <meta charset="utf-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -20,20 +27,34 @@ import "../styles/global.css";
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Noto+Serif+SC:wght@400;500;600;700;900&display=swap"
       rel="stylesheet"
     />
+    <script is:inline>
+      (() => {
+        const saved = localStorage.getItem("myweb.theme");
+        const preferred = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        if ((saved || preferred) === "dark") document.documentElement.classList.add("theme-dark");
+      })();
+    </script>
     <title>{siteConfig.name} - {siteConfig.title}</title>
   </head>
   <body>
     <Header />
     <section>
       <Hero />
+      <Moments />
+      <LocalWorkbench />
+      <LocalEditorCenter />
+      <NotesPreview />
+      <Timeline />
       <About />
+      <PublicProjects />
       <Projects />
       <Experience />
       <Education />
     </section>
     <Footer />
+    <ThemeToggle />
   </body>
 </html>

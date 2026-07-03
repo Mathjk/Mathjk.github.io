@@ -1,0 +1,433 @@
+---
+import { siteConfig } from "../config";
+
+const workbench = siteConfig.localWorkbench;
+---
+
+{
+  workbench && (
+    <section
+      id="workbench"
+      class="p-8 sm:p-12 md:p-16 lg:p-24"
+      data-bridge-url={workbench.bridgeUrl}
+      style={`--accent-color: ${siteConfig.accentColor}`}
+    >
+      <div class="grid grid-cols-1 items-start gap-8 lg:grid-cols-12 lg:gap-16">
+        <div class="lg:col-span-4">
+          <h2 class="text-3xl font-bold text-gray-900 sm:text-4xl md:text-5xl xl:text-7xl">
+            本地工具台
+          </h2>
+          <div
+            class="mt-2 h-[5px] w-[75px] rounded-full"
+            style={`background-color: ${siteConfig.accentColor}`}
+          />
+          <p class="mt-6 max-w-sm text-base leading-7 text-gray-500">
+            {workbench.note}
+          </p>
+
+          <div class="mt-6 rounded-2xl border border-gray-200 bg-gray-50 p-4">
+            <p class="font-mono text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">
+              Start Bridge
+            </p>
+            <div class="mt-3 space-y-2">
+              {workbench.startCommands.map((command) => (
+                <code class="block rounded-lg bg-white px-3 py-2 font-mono text-xs text-gray-700 ring-1 ring-gray-200">
+                  {command}
+                </code>
+              ))}
+            </div>
+          </div>
+
+          <div class="mt-4 rounded-2xl border border-gray-200 bg-gray-50 p-4">
+            <p class="font-mono text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">
+              Local Token
+            </p>
+            <p id="workbenchAuthText" class="mt-3 text-sm leading-7 text-gray-600">
+              解锁后才允许启动本地程序或写入 local_tools.json。
+            </p>
+            <form id="workbenchUnlockForm" class="mt-4 flex flex-col gap-2">
+              <input
+                id="workbenchToken"
+                type="password"
+                autocomplete="off"
+                placeholder="本地编辑 token"
+                class="rounded-lg border border-gray-200 bg-white px-3 py-2 font-mono text-xs text-gray-700 outline-none focus:border-gray-400"
+              />
+              <button
+                type="submit"
+                class="rounded-lg bg-gray-900 px-3 py-2 font-mono text-xs font-semibold text-white transition-colors hover:bg-gray-700"
+              >
+                解锁工具台
+              </button>
+            </form>
+            <button
+              id="workbenchLockButton"
+              type="button"
+              class="mt-3 hidden w-full rounded-lg border border-gray-200 bg-white px-3 py-2 font-mono text-xs font-semibold text-gray-700 transition-colors hover:border-gray-300"
+            >
+              锁定工具台
+            </button>
+          </div>
+        </div>
+
+        <div class="lg:col-span-8">
+          <div class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm sm:p-6 md:p-8">
+            <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p class="font-mono text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">
+                  Local Bridge
+                </p>
+                <h3 class="mt-2 text-2xl font-bold text-gray-900">
+                  程序、后台脚本、本地网页
+                </h3>
+              </div>
+              <div class="flex items-center gap-3">
+                <span
+                  id="workbenchStatus"
+                  class="rounded-full bg-gray-100 px-3 py-1.5 font-mono text-xs font-semibold text-gray-600"
+                >
+                  Checking
+                </span>
+                <button
+                  id="workbenchRefresh"
+                  type="button"
+                  class="rounded-lg bg-gray-900 px-3 py-2 font-mono text-xs font-semibold text-white transition-colors hover:bg-gray-700"
+                >
+                  刷新
+                </button>
+              </div>
+            </div>
+
+            <p id="workbenchMeta" class="mt-4 text-sm leading-7 text-gray-500">
+              正在连接本地桥接服务...
+            </p>
+
+            <div id="toolEditorPanel" class="mt-6 hidden rounded-2xl border border-gray-200 bg-gray-50 p-5">
+              <div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <p class="font-mono text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">
+                    Add Tool
+                  </p>
+                  <h4 class="mt-2 text-xl font-bold text-gray-900">新增本地工具</h4>
+                </div>
+                <p class="text-sm text-gray-500">保存后写入 local_tools.json。</p>
+              </div>
+              <form id="toolForm" class="mt-5 grid grid-cols-1 gap-3">
+                <input name="title" required placeholder="工具名称" class="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm outline-none focus:border-gray-400" />
+                <textarea name="description" rows="2" placeholder="一句描述" class="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm outline-none focus:border-gray-400"></textarea>
+                <select name="kind" class="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm outline-none focus:border-gray-400">
+                  <option value="app">本地 App</option>
+                  <option value="web">本地网页</option>
+                  <option value="service">后台服务</option>
+                </select>
+                <input name="tags" placeholder="标签，用逗号分隔，例如：Local Web, Python" class="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm outline-none focus:border-gray-400" />
+                <input name="url" placeholder="本地网页 URL，例如：http://127.0.0.1:8000/" class="rounded-lg border border-gray-200 bg-white px-3 py-2 font-mono text-xs outline-none focus:border-gray-400" />
+                <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <input name="windowsUrl" placeholder="Windows URL，例如：http://127.0.0.1:8080/" class="rounded-lg border border-gray-200 bg-white px-3 py-2 font-mono text-xs outline-none focus:border-gray-400" />
+                  <input name="linuxUrl" placeholder="Linux URL，例如：http://127.0.0.1/" class="rounded-lg border border-gray-200 bg-white px-3 py-2 font-mono text-xs outline-none focus:border-gray-400" />
+                </div>
+                <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <input name="port" placeholder="端口，例如：8765" class="rounded-lg border border-gray-200 bg-white px-3 py-2 font-mono text-xs outline-none focus:border-gray-400" />
+                  <input name="openDelaySeconds" placeholder="打开前等待秒数，例如：1.5" class="rounded-lg border border-gray-200 bg-white px-3 py-2 font-mono text-xs outline-none focus:border-gray-400" />
+                </div>
+                <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <input name="windowsPath" placeholder="Windows app 路径" class="rounded-lg border border-gray-200 bg-white px-3 py-2 font-mono text-xs outline-none focus:border-gray-400" />
+                  <input name="linuxPath" placeholder="Linux app 路径" class="rounded-lg border border-gray-200 bg-white px-3 py-2 font-mono text-xs outline-none focus:border-gray-400" />
+                  <input name="windowsCommand" placeholder="Windows 启动命令，例如：cmd /c start.bat" class="rounded-lg border border-gray-200 bg-white px-3 py-2 font-mono text-xs outline-none focus:border-gray-400" />
+                  <input name="linuxCommand" placeholder="Linux 启动命令，例如：./start.sh" class="rounded-lg border border-gray-200 bg-white px-3 py-2 font-mono text-xs outline-none focus:border-gray-400" />
+                  <input name="windowsCwd" placeholder="Windows 工作目录" class="rounded-lg border border-gray-200 bg-white px-3 py-2 font-mono text-xs outline-none focus:border-gray-400" />
+                  <input name="linuxCwd" placeholder="Linux 工作目录，例如：/home/jk/gpu-dashboard" class="rounded-lg border border-gray-200 bg-white px-3 py-2 font-mono text-xs outline-none focus:border-gray-400" />
+                  <input name="windowsPython" placeholder="Windows 后台 .py 路径" class="rounded-lg border border-gray-200 bg-white px-3 py-2 font-mono text-xs outline-none focus:border-gray-400" />
+                  <input name="linuxPython" placeholder="Linux 后台 .py 路径" class="rounded-lg border border-gray-200 bg-white px-3 py-2 font-mono text-xs outline-none focus:border-gray-400" />
+                </div>
+                <button type="submit" class="justify-self-start rounded-lg bg-gray-900 px-4 py-2 font-mono text-xs font-semibold text-white transition-colors hover:bg-gray-700">
+                  保存工具
+                </button>
+              </form>
+            </div>
+
+            <div id="workbenchTools" class="mt-6 grid grid-cols-1 gap-4"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+<script>
+  const root = document.getElementById("workbench");
+  const statusNode = document.getElementById("workbenchStatus");
+  const metaNode = document.getElementById("workbenchMeta");
+  const toolsNode = document.getElementById("workbenchTools");
+  const refreshButton = document.getElementById("workbenchRefresh");
+  const unlockForm = document.getElementById("workbenchUnlockForm");
+  const tokenInput = document.getElementById("workbenchToken");
+  const lockButton = document.getElementById("workbenchLockButton");
+  const authText = document.getElementById("workbenchAuthText");
+  const toolEditorPanel = document.getElementById("toolEditorPanel");
+  const toolForm = document.getElementById("toolForm");
+  const bridgeUrl = root?.dataset.bridgeUrl || "http://127.0.0.1:3939";
+  const editorTokenKey = "myweb.editorToken";
+  let workbenchUnlocked = false;
+
+  function escapeHtml(value) {
+    return String(value || "").replace(/[&<>"']/g, (char) => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;",
+    })[char]);
+  }
+
+  function getEditorToken() {
+    return localStorage.getItem(editorTokenKey) || "";
+  }
+
+  function setStatus(label, tone = "neutral") {
+    if (!statusNode) return;
+    statusNode.textContent = label;
+    statusNode.className = "rounded-full px-3 py-1.5 font-mono text-xs font-semibold";
+    const tones = {
+      ok: "bg-emerald-50 text-emerald-700",
+      warn: "bg-amber-50 text-amber-700",
+      error: "bg-rose-50 text-rose-700",
+      neutral: "bg-gray-100 text-gray-600",
+    };
+    statusNode.classList.add(...(tones[tone] || tones.neutral).split(" "));
+  }
+
+  async function bridgeRequest(path, options = {}) {
+    const headers = new Headers(options.headers || {});
+    const token = getEditorToken();
+    if (token) headers.set("X-MyWeb-Token", token);
+    if (options.body && !headers.has("Content-Type")) {
+      headers.set("Content-Type", "application/json");
+    }
+    const response = await fetch(`${bridgeUrl}${path}`, { ...options, headers });
+    const data = await response.json();
+    if (!response.ok || !data.ok) {
+      throw new Error(data.error || `HTTP ${response.status}`);
+    }
+    return data;
+  }
+
+  function renderOffline(error) {
+    setStatus("Offline", "error");
+    if (metaNode) {
+      metaNode.textContent = `桥接服务未连接：${error.message}。先在 myweb 根目录启动 start_local_app_server.bat 或 ./start_local_app_server.sh，再刷新本页。`;
+    }
+    if (toolsNode) {
+      toolsNode.innerHTML = `
+        <div class="rounded-2xl border border-dashed border-gray-300 bg-gray-50 p-5">
+          <h4 class="text-lg font-bold text-gray-900">等待本地桥接服务</h4>
+          <p class="mt-3 text-sm leading-7 text-gray-600">
+            浏览器不能直接启动本机程序。桥接服务启动后，这里会自动显示 myapp 扫描到的程序、local_tools.json 里的本地网页服务，以及“启动后台并打开”的按钮。
+          </p>
+        </div>
+      `;
+    }
+  }
+
+  function renderTools(payload) {
+    const tools = payload.tools || [];
+    setStatus(workbenchUnlocked ? "Unlocked" : "Online", workbenchUnlocked ? "ok" : "warn");
+    if (metaNode) {
+      metaNode.textContent = `${payload.platform || "unknown"} 平台，已加载 ${tools.length} 个工具。${workbenchUnlocked ? "已允许启动和编辑。" : "解锁后才能启动本地程序或写入配置。"}`;
+    }
+
+    if (!toolsNode) return;
+    if (!tools.length) {
+      toolsNode.innerHTML = `
+        <div class="rounded-2xl border border-dashed border-gray-300 bg-gray-50 p-5">
+          <h4 class="text-lg font-bold text-gray-900">暂无工具</h4>
+          <p class="mt-3 text-sm leading-7 text-gray-600">把 exe 放进 myapp，或解锁后在网页里添加本地应用/本地网页服务。</p>
+        </div>
+      `;
+      return;
+    }
+
+    toolsNode.innerHTML = tools.map((tool) => {
+      const tags = (tool.tags || []).map((tag) => `<span class="rounded-md bg-gray-900 px-2 py-1 font-mono text-[11px] font-medium text-white">${escapeHtml(tag)}</span>`).join("");
+      const versions = (tool.versions || []).length > 0
+        ? `<select class="workbench-version rounded-lg border border-gray-200 bg-white px-2 py-2 font-mono text-xs text-gray-700" data-tool-version="${escapeHtml(tool.id)}">
+            ${(tool.versions || []).map((version) => `<option value="${escapeHtml(version)}" ${version === tool.defaultVersion ? "selected" : ""}>${escapeHtml(version)}</option>`).join("")}
+          </select>`
+        : "";
+      const primaryLabel = tool.kind === "web" && tool.url ? "启动并打开" : "启动";
+      const primaryButton = workbenchUnlocked && tool.canLaunch
+        ? `<button type="button" class="workbench-run rounded-lg bg-gray-900 px-3 py-2 font-mono text-xs font-semibold text-white transition-colors hover:bg-gray-700" data-tool-id="${escapeHtml(tool.id)}">${primaryLabel}</button>`
+        : "";
+      const lockedHint = !workbenchUnlocked && tool.canLaunch
+        ? `<span class="rounded-lg bg-amber-50 px-3 py-2 font-mono text-xs font-semibold text-amber-700">解锁后启动</span>`
+        : "";
+      const openButton = tool.url
+        ? `<button type="button" class="workbench-open rounded-lg border border-gray-200 bg-white px-3 py-2 font-mono text-xs font-semibold text-gray-700 transition-colors hover:border-gray-300" data-tool-url="${escapeHtml(tool.url)}">只打开网页</button>`
+        : "";
+      const deleteButton = workbenchUnlocked && tool.source === "config"
+        ? `<button type="button" class="workbench-delete rounded-lg border border-gray-200 bg-white px-3 py-2 font-mono text-xs font-semibold text-gray-600 transition-colors hover:border-rose-200 hover:text-rose-700" data-tool-id="${escapeHtml(tool.id)}">删除</button>`
+        : "";
+
+      return `
+        <article class="rounded-2xl border border-gray-200 bg-gray-50 p-5 transition-all duration-300 hover:border-gray-300 hover:bg-white hover:shadow-md">
+          <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <p class="font-mono text-xs font-semibold uppercase tracking-[0.2em] text-blue-600">${escapeHtml(tool.source || tool.kind || "local")}</p>
+              <h4 class="mt-2 text-xl font-bold text-gray-900">${escapeHtml(tool.title)}</h4>
+              <p class="mt-2 text-sm leading-7 text-gray-600">${escapeHtml(tool.description)}</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2 sm:justify-end">
+              ${versions}
+              ${primaryButton}
+              ${lockedHint}
+              ${openButton}
+              ${deleteButton}
+            </div>
+          </div>
+          ${tags ? `<div class="mt-4 flex flex-wrap gap-2">${tags}</div>` : ""}
+        </article>
+      `;
+    }).join("");
+  }
+
+  async function refreshAuthState() {
+    const token = getEditorToken();
+    if (tokenInput) tokenInput.value = token;
+    try {
+      const state = await bridgeRequest("/api/editor/state");
+      workbenchUnlocked = Boolean(state.authenticated);
+      toolEditorPanel?.classList.toggle("hidden", !workbenchUnlocked);
+      lockButton?.classList.toggle("hidden", !workbenchUnlocked);
+      if (authText) {
+        authText.textContent = workbenchUnlocked
+          ? `已解锁，可写入 ${state.toolsPath}`
+          : "桥接服务在线。输入 token 后可以启动本地程序或写入 local_tools.json。";
+      }
+    } catch {
+      workbenchUnlocked = false;
+      toolEditorPanel?.classList.add("hidden");
+      lockButton?.classList.add("hidden");
+      if (authText) authText.textContent = "桥接服务未连接，工具台保持只读。";
+    }
+  }
+
+  async function loadWorkbench() {
+    try {
+      setStatus("Checking", "neutral");
+      await refreshAuthState();
+      const payload = await bridgeRequest("/api/tools");
+      renderTools(payload);
+    } catch (error) {
+      renderOffline(error);
+    }
+  }
+
+  async function runTool(toolId) {
+    if (!toolId) return;
+    const versionSelect = [...document.querySelectorAll("[data-tool-version]")]
+      .find((node) => node.getAttribute("data-tool-version") === toolId);
+    const version = versionSelect ? versionSelect.value : undefined;
+    try {
+      setStatus("Running", "warn");
+      const result = await bridgeRequest("/api/tools/run", {
+        method: "POST",
+        body: JSON.stringify({ id: toolId, version, open_url: true }),
+      });
+      if (result.url) {
+        window.open(result.url, "_blank", "noopener,noreferrer");
+      }
+      await loadWorkbench();
+    } catch (error) {
+      setStatus("Failed", "error");
+      alert(`启动失败：${error.message}`);
+    }
+  }
+
+  unlockForm?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const token = tokenInput?.value?.trim();
+    if (!token) return;
+    localStorage.setItem(editorTokenKey, token);
+    window.dispatchEvent(new Event("myweb-token-updated"));
+    await loadWorkbench();
+  });
+
+  lockButton?.addEventListener("click", async () => {
+    localStorage.removeItem(editorTokenKey);
+    if (tokenInput) tokenInput.value = "";
+    workbenchUnlocked = false;
+    toolEditorPanel?.classList.add("hidden");
+    lockButton.classList.add("hidden");
+    window.dispatchEvent(new Event("myweb-token-updated"));
+    await loadWorkbench();
+  });
+
+  refreshButton?.addEventListener("click", loadWorkbench);
+  toolsNode?.addEventListener("click", async (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLElement)) return;
+
+    const runButton = target.closest(".workbench-run");
+    if (runButton) {
+      runTool(runButton.getAttribute("data-tool-id"));
+      return;
+    }
+
+    const openButton = target.closest(".workbench-open");
+    if (openButton) {
+      const url = openButton.getAttribute("data-tool-url");
+      if (url) window.open(url, "_blank", "noopener,noreferrer");
+      return;
+    }
+
+    const deleteButton = target.closest(".workbench-delete");
+    if (deleteButton) {
+      const id = deleteButton.getAttribute("data-tool-id");
+      if (!id || !confirm("删除这个配置工具？自动扫描的 myapp 工具不会被删除。")) return;
+      try {
+        await bridgeRequest(`/api/editor/tools?id=${encodeURIComponent(id)}`, { method: "DELETE" });
+        await loadWorkbench();
+      } catch (error) {
+        alert(`删除失败：${error.message}`);
+      }
+    }
+  });
+
+  toolForm?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const form = new FormData(toolForm);
+    const payload = {
+      title: String(form.get("title") || "").trim(),
+      description: String(form.get("description") || "").trim(),
+      kind: String(form.get("kind") || "app"),
+      tags: String(form.get("tags") || "").trim(),
+      url: String(form.get("url") || "").trim(),
+      windowsUrl: String(form.get("windowsUrl") || "").trim(),
+      linuxUrl: String(form.get("linuxUrl") || "").trim(),
+      port: String(form.get("port") || "").trim(),
+      openDelaySeconds: String(form.get("openDelaySeconds") || "").trim(),
+      windowsPath: String(form.get("windowsPath") || "").trim(),
+      linuxPath: String(form.get("linuxPath") || "").trim(),
+      windowsCommand: String(form.get("windowsCommand") || "").trim(),
+      linuxCommand: String(form.get("linuxCommand") || "").trim(),
+      windowsCwd: String(form.get("windowsCwd") || "").trim(),
+      linuxCwd: String(form.get("linuxCwd") || "").trim(),
+      windowsPython: String(form.get("windowsPython") || "").trim(),
+      linuxPython: String(form.get("linuxPython") || "").trim(),
+    };
+
+    try {
+      await bridgeRequest("/api/editor/tools", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
+      toolForm.reset();
+      await loadWorkbench();
+    } catch (error) {
+      alert(`保存失败：${error.message}`);
+    }
+  });
+
+  loadWorkbench();
+  window.addEventListener("myweb-token-updated", loadWorkbench);
+</script>

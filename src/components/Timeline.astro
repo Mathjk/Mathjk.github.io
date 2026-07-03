@@ -1,0 +1,45 @@
+---
+import { siteConfig } from "../config";
+
+const entries = siteConfig.timeline ?? [];
+---
+
+{
+  entries.length > 0 && (
+    <section id="timeline" class="p-8 sm:p-12 md:p-16 lg:p-24">
+      <div class="grid grid-cols-1 items-start gap-8 lg:grid-cols-12 lg:gap-16">
+        <div class="lg:col-span-4">
+          <h2 class="text-3xl font-bold text-gray-900 sm:text-4xl md:text-5xl xl:text-7xl">
+            时间线
+          </h2>
+          <div
+            class="mt-2 h-[5px] w-[75px] rounded-full"
+            style={`background-color: ${siteConfig.accentColor}`}
+          />
+          <p class="mt-6 max-w-sm text-base leading-7 text-gray-500">
+            主页、工具和学习记录的长期轨迹。后续可以继续补充重要节点。
+          </p>
+        </div>
+
+        <div class="lg:col-span-8">
+          <div class="relative space-y-6">
+            {entries.map((entry) => (
+              <article class="rounded-2xl border border-gray-200 bg-gray-50 p-5 transition-all duration-300 hover:border-gray-300 hover:bg-white hover:shadow-md sm:p-6">
+                <p class="font-mono text-xs font-semibold uppercase tracking-[0.2em]" style={{ color: siteConfig.accentColor }}>
+                  {entry.date}
+                </p>
+                <h3 class="mt-2 text-xl font-bold text-gray-900">{entry.title}</h3>
+                <p class="mt-3 text-sm leading-7 text-gray-600">{entry.description}</p>
+                <div class="mt-4 flex flex-wrap gap-2">
+                  {entry.tags.map((tag) => (
+                    <span class="rounded-md bg-gray-900 px-2.5 py-1 font-mono text-xs font-medium text-white">{tag}</span>
+                  ))}
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}

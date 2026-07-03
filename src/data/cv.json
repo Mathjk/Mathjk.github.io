@@ -1,0 +1,18 @@
+{
+  "summary": "这里保留 CV 页面骨架。后续可以补充教育经历、项目经历、研究方向和联系方式。",
+  "highlights": [
+    "Mathematics",
+    "Approximation Theory",
+    "LaTeX",
+    "AI Tools",
+    "Local Utilities"
+  ],
+  "education": [],
+  "experience": [],
+  "links": [
+    {
+      "label": "Bilibili",
+      "href": "https://space.bilibili.com/393071145"
+    }
+  ]
+}

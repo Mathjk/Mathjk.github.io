@@ -9,7 +9,7 @@ import { siteConfig } from "../config";
         <h2
           class="text-3xl sm:text-4xl md:text-5xl xl:text-7xl font-bold text-gray-900"
         >
-          About Me
+          关于
         </h2>
         <div
           class="w-[75px] h-[5px] mt-2 rounded-full"
@@ -23,7 +23,7 @@ import { siteConfig } from "../config";
           {siteConfig.aboutMe}
         </p>
 
-        <div class="pt-4">
+        {siteConfig.skills && siteConfig.skills.length > 0 && <div class="pt-4">
           <div class="flex flex-wrap gap-3">
             {
               siteConfig.skills.map((skill) => (
@@ -33,7 +33,7 @@ import { siteConfig } from "../config";
               ))
             }
           </div>
-        </div>
+        </div>}
       </div>
     </div>
   </div>

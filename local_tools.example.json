@@ -1,0 +1,52 @@
+{
+  "tools": [
+    {
+      "id": "desktop-app-example",
+      "title": "桌面应用示例",
+      "description": "Windows 和 Linux 使用不同本地程序路径。路径可以是绝对路径，也可以相对 myweb 根目录。",
+      "kind": "app",
+      "tags": ["Desktop", "Example"],
+      "launch": {
+        "windows": {
+          "path": "C:\\Tools\\Example\\example.exe"
+        },
+        "linux": {
+          "path": "/home/jk/tools/example"
+        }
+      }
+    },
+    {
+      "id": "local-web-example",
+      "title": "本地网页服务示例",
+      "description": "点击后先启动本地命令，再打开本地网页 URL。port 可以自动生成 http://127.0.0.1:端口/。",
+      "kind": "web",
+      "url": "http://127.0.0.1:8000/",
+      "urls": {
+        "linux": "http://127.0.0.1:8000/",
+        "windows": "http://127.0.0.1:8000/"
+      },
+      "port": 8000,
+      "tags": ["Local Web", "Python"],
+      "openDelaySeconds": 1.5,
+      "launch": {
+        "linux": {
+          "command": ["./start.sh"],
+          "cwd": "/home/jk/example-dashboard"
+        }
+      }
+    },
+    {
+      "id": "command-example",
+      "title": "命令示例",
+      "description": "需要启动命令而不是文件时，使用数组形式，服务端不会执行 shell 字符串。",
+      "kind": "service",
+      "tags": ["Command", "Example"],
+      "launch": {
+        "linux": {
+          "command": ["python3", "-m", "http.server", "8001"],
+          "cwd": "/home/jk/myweb"
+        }
+      }
+    }
+  ]
+}

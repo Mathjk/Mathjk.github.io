@@ -215,7 +215,7 @@ const workbench = siteConfig.localWorkbench;
   function renderOffline(error) {
     setStatus("Offline", "error");
     if (metaNode) {
-      metaNode.textContent = `桥接服务未连接：${error.message}。先在 myweb 根目录启动 start_local_app_server.bat 或 ./start_local_app_server.sh，再刷新本页。`;
+      metaNode.textContent = `桥接服务未连接：${error.message}。如果是从 GitHub Pages 打开，请先在当前电脑 clone 仓库并运行 start_local_app_server.bat 或 ./start_local_app_server.sh，再刷新本页。`;
     }
     if (toolsNode) {
       toolsNode.innerHTML = `

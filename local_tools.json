@@ -1,0 +1,52 @@
+{
+  "tools": [
+    {
+      "id": "gpu-dashboard",
+      "title": "GPU Dashboard",
+      "description": "启动 /home/jk/gpu-dashboard/start.sh，然后打开本地 GPU 控制台。",
+      "kind": "web",
+      "url": "http://127.0.0.1:8765/",
+      "port": 8765,
+      "openDelaySeconds": 1,
+      "tags": [
+        "Local Web",
+        "GPU",
+        "Port 8765"
+      ],
+      "launch": {
+        "linux": {
+          "command": [
+            "./start.sh"
+          ],
+          "cwd": "/home/jk/gpu-dashboard"
+        }
+      }
+    },
+    {
+      "id": "overleaf-local-8080",
+      "title": "Overleaf Local",
+      "description": "Linux 端启动 /home/jk/overleaf/overleaf-toolkit；Windows 端先打开 Start-Overleaf-Tunnel-Key.cmd。两边会打开各自可用的本地地址。",
+      "kind": "web",
+      "urls": {
+        "linux": "http://127.0.0.1/",
+        "windows": "http://127.0.0.1:8080/"
+      },
+      "openDelaySeconds": 3,
+      "tags": [
+        "Local Web",
+        "Overleaf",
+        "Port 80",
+        "Port 8080"
+      ],
+      "launch": {
+        "linux": {
+          "command": [
+            "bin/up",
+            "-d"
+          ],
+          "cwd": "/home/jk/overleaf/overleaf-toolkit"
+        }
+      }
+    }
+  ]
+}

@@ -7,7 +7,7 @@
       "kind": "web",
       "url": "http://127.0.0.1:8765/",
       "port": 8765,
-      "openDelaySeconds": 2,
+      "openDelaySeconds": 4,
       "tags": [
         "Local Web",
         "GPU",
@@ -19,7 +19,7 @@
             "wsl.exe",
             "bash",
             "-lc",
-            "cd /home/jk/gpu-dashboard && ./start.sh"
+            "cd /home/jk/gpu-dashboard && (./stop.sh >/dev/null 2>&1 || true) && HOST=0.0.0.0 PORT=8765 ./start.sh"
           ]
         },
         "linux": {
@@ -54,7 +54,7 @@
             "-ExecutionPolicy",
             "Bypass",
             "-Command",
-            "$p = (wsl.exe wslpath -w /home/jk/overleaf/windows-launcher/Start-Overleaf-Tunnel-Key.cmd).Trim(); Start-Process -FilePath $p"
+            "$src = (wsl.exe wslpath -w /home/jk/overleaf/windows-launcher/Start-Overleaf-Tunnel-Key.cmd).Trim(); $dst = Join-Path $env:TEMP 'Start-Overleaf-Tunnel-Key.cmd'; Copy-Item -LiteralPath $src -Destination $dst -Force; Start-Process -FilePath $dst"
           ]
         },
         "linux": {

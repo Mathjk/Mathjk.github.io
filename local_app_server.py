@@ -116,6 +116,32 @@ def parse_request_body(handler: BaseHTTPRequestHandler) -> dict:
     return payload
 
 
+def choose_local_path(kind: str, title: str = "", initial_dir: str = "") -> str:
+    try:
+        import tkinter as tk
+        from tkinter import filedialog
+    except Exception as exc:
+        raise RuntimeError("Python tkinter is required for the local path picker") from exc
+
+    root = tk.Tk()
+    root.withdraw()
+    root.attributes("-topmost", True)
+    try:
+        options = {"title": title or "Choose local path"}
+        if initial_dir:
+            options["initialdir"] = initial_dir
+        if kind == "file":
+            selected = filedialog.askopenfilename(**options)
+        else:
+            selected = filedialog.askdirectory(**options)
+    finally:
+        root.destroy()
+
+    if not selected:
+        raise ValueError("path selection cancelled")
+    return selected
+
+
 def load_metadata() -> dict:
     if not METADATA_PATH.exists():
         return {}
@@ -215,6 +241,19 @@ def parse_command(value, platform: str) -> list[str]:
     if not command:
         return []
     return command
+
+
+def action_environment(action: dict) -> dict | None:
+    raw_env = action.get("env")
+    if not isinstance(raw_env, dict):
+        return None
+    env = os.environ.copy()
+    for key, value in raw_env.items():
+        clean_key = str(key).strip()
+        clean_value = str(value).strip()
+        if clean_key and clean_value:
+            env[clean_key] = clean_value
+    return env
 
 
 def load_resources() -> list[dict]:
@@ -357,6 +396,50 @@ def upsert_tool(payload: dict) -> dict:
     config["tools"].append(tool)
     write_json_file(TOOL_CONFIG_PATH, config)
     return tool
+
+
+def read_target_value(tool: dict, target: str) -> str:
+    cursor = tool
+    for part in target.split("."):
+        if not isinstance(cursor, dict):
+            return ""
+        cursor = cursor.get(part)
+    return str(cursor or "")
+
+
+def write_target_value(tool: dict, target: str, value: str) -> None:
+    parts = target.split(".")
+    if len(parts) != 4 or parts[0] not in {"backend", "launch"} or parts[2] != "env":
+        raise ValueError("unsupported path option target")
+    block, platform, _, env_key = parts
+    if platform not in {"windows", "linux", "mac", "default"}:
+        raise ValueError("unsupported path option platform")
+    if not re.fullmatch(r"[A-Z0-9_]+", env_key):
+        raise ValueError("unsupported environment variable name")
+
+    action = tool.setdefault(block, {}).setdefault(platform, {})
+    action.setdefault("env", {})[env_key] = value
+
+
+def update_tool_path_option(payload: dict) -> dict:
+    tool_id = str(payload.get("id", "")).removeprefix("config:")
+    target = str(payload.get("target", "")).strip()
+    value = str(payload.get("value", "")).strip()
+    if not tool_id or not target or not value:
+        raise ValueError("tool id, target, and value are required")
+
+    config = load_tool_config()
+    for tool in config.get("tools", []):
+        if not isinstance(tool, dict) or tool.get("id") != tool_id:
+            continue
+        options = tool.get("pathOptions") if isinstance(tool.get("pathOptions"), list) else []
+        if not any(isinstance(option, dict) and option.get("target") == target for option in options):
+            raise ValueError("path option is not declared for this tool")
+        write_target_value(tool, target, value)
+        write_json_file(TOOL_CONFIG_PATH, config)
+        return tool
+
+    raise FileNotFoundError(tool_id)
 
 
 def delete_configured_tool(tool_id: str) -> None:
@@ -542,6 +625,16 @@ def configured_tools_as_public() -> list[dict]:
                 "canLaunch": bool(launch_action or backend_action),
                 "hasBackend": bool(backend_action),
                 "openDelaySeconds": raw_tool.get("openDelaySeconds", 1),
+                "pathOptions": [
+                    {
+                        "label": option.get("label", "选择路径"),
+                        "kind": option.get("kind", "directory"),
+                        "target": option.get("target", ""),
+                        "configured": bool(read_target_value(raw_tool, option.get("target", ""))),
+                    }
+                    for option in (raw_tool.get("pathOptions") or [])
+                    if isinstance(option, dict) and option.get("target")
+                ],
             }
         )
     return tools
@@ -577,12 +670,19 @@ def resolve_tool_path(value: str, cwd: Path | None = None) -> Path:
     return (base / raw).resolve()
 
 
-def launch_file(target: Path) -> None:
+def launch_file(target: Path, args: list[str] | None = None, env: dict | None = None) -> None:
     if not target.exists():
         raise FileNotFoundError(str(target))
     logger.info("Launching file: %s", target)
+    args = args or []
 
     if sys.platform.startswith("win"):
+        if args or env:
+            if target.suffix.lower() in {".bat", ".cmd"}:
+                subprocess.Popen(["cmd.exe", "/c", "start", "", str(target), *args], cwd=str(target.parent), env=env)
+            else:
+                subprocess.Popen([str(target), *args], cwd=str(target.parent), env=env)
+            return
         os.startfile(str(target))  # type: ignore[attr-defined]
         return
 
@@ -595,18 +695,19 @@ def launch_file(target: Path) -> None:
         subprocess.Popen([wine, str(target)], cwd=str(target.parent))
         return
 
-    subprocess.Popen([str(target)], cwd=str(target.parent))
+    subprocess.Popen([str(target), *args], cwd=str(target.parent), env=env)
 
 
 def run_action(action: dict, title: str) -> str:
     cwd_value = action.get("cwd")
     cwd = resolve_tool_path(cwd_value) if cwd_value else ROOT_DIR
+    env = action_environment(action)
 
     if action.get("python"):
         script = resolve_tool_path(action["python"], cwd)
         args = [str(item) for item in action.get("args", [])]
         logger.info("Starting python backend for %s: %s", title, script)
-        subprocess.Popen([sys.executable, str(script), *args], cwd=str(script.parent))
+        subprocess.Popen([sys.executable, str(script), *args], cwd=str(script.parent), env=env)
         return str(script)
 
     if action.get("command"):
@@ -614,12 +715,13 @@ def run_action(action: dict, title: str) -> str:
         if not isinstance(command, list):
             raise ValueError("command must be a list, not a shell string")
         logger.info("Starting command for %s: %s", title, command)
-        subprocess.Popen([str(part) for part in command], cwd=str(cwd))
+        subprocess.Popen([str(part) for part in command], cwd=str(cwd), env=env)
         return " ".join(str(part) for part in command)
 
     if action.get("path"):
         target = resolve_tool_path(action["path"], cwd)
-        launch_file(target)
+        args = [str(item) for item in action.get("args", [])]
+        launch_file(target, args=args, env=env)
         return str(target)
 
     raise ValueError("tool has no runnable action for this platform")
@@ -799,6 +901,35 @@ class AppHandler(BaseHTTPRequestHandler):
                 self.respond_json({"ok": False, "error": str(exc)}, status=HTTPStatus.UNAUTHORIZED)
             except Exception as exc:
                 logger.exception("Tool save failed")
+                self.respond_json({"ok": False, "error": str(exc)}, status=HTTPStatus.BAD_REQUEST)
+            return
+
+        if route == "/api/editor/browse":
+            try:
+                require_auth(self)
+                payload = parse_request_body(self)
+                path = choose_local_path(
+                    str(payload.get("kind") or "directory"),
+                    str(payload.get("title") or "Choose local path"),
+                    str(payload.get("initialDir") or ""),
+                )
+                self.respond_json({"ok": True, "path": path})
+            except PermissionError as exc:
+                self.respond_json({"ok": False, "error": str(exc)}, status=HTTPStatus.UNAUTHORIZED)
+            except Exception as exc:
+                logger.exception("Path browse failed")
+                self.respond_json({"ok": False, "error": str(exc)}, status=HTTPStatus.BAD_REQUEST)
+            return
+
+        if route == "/api/editor/tool-path":
+            try:
+                require_auth(self)
+                tool = update_tool_path_option(parse_request_body(self))
+                self.respond_json({"ok": True, "tool": tool, "tools": get_public_tools()})
+            except PermissionError as exc:
+                self.respond_json({"ok": False, "error": str(exc)}, status=HTTPStatus.UNAUTHORIZED)
+            except Exception as exc:
+                logger.exception("Tool path update failed")
                 self.respond_json({"ok": False, "error": str(exc)}, status=HTTPStatus.BAD_REQUEST)
             return
 

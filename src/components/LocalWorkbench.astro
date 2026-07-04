@@ -264,6 +264,23 @@ const workbench = siteConfig.localWorkbench;
       const openButton = tool.url
         ? `<button type="button" class="workbench-open rounded-lg border border-gray-200 bg-white px-3 py-2 font-mono text-xs font-semibold text-gray-700 transition-colors hover:border-gray-300" data-tool-url="${escapeHtml(tool.url)}">只打开网页</button>`
         : "";
+      const pathButtons = workbenchUnlocked && tool.source === "config" && (tool.pathOptions || []).length
+        ? (tool.pathOptions || []).map((option) => {
+          const pathStatus = option.configured ? "已设置" : "未设置";
+          return `
+          <button
+            type="button"
+            class="workbench-browse rounded-lg border border-gray-200 bg-white px-3 py-2 font-mono text-xs font-semibold text-gray-700 transition-colors hover:border-gray-300"
+            data-tool-id="${escapeHtml(tool.id)}"
+            data-path-kind="${escapeHtml(option.kind || "directory")}"
+            data-path-target="${escapeHtml(option.target)}"
+            title="${escapeHtml(pathStatus)}"
+          >
+            ${escapeHtml(option.label || "选择路径")}${option.configured ? " · 已设置" : ""}
+          </button>
+        `;
+        }).join("")
+        : "";
       const deleteButton = workbenchUnlocked && tool.source === "config"
         ? `<button type="button" class="workbench-delete rounded-lg border border-gray-200 bg-white px-3 py-2 font-mono text-xs font-semibold text-gray-600 transition-colors hover:border-rose-200 hover:text-rose-700" data-tool-id="${escapeHtml(tool.id)}">删除</button>`
         : "";
@@ -281,6 +298,7 @@ const workbench = siteConfig.localWorkbench;
               ${primaryButton}
               ${lockedHint}
               ${openButton}
+              ${pathButtons}
               ${deleteButton}
             </div>
           </div>
@@ -377,6 +395,36 @@ const workbench = siteConfig.localWorkbench;
     if (openButton) {
       const url = openButton.getAttribute("data-tool-url");
       if (url) window.open(url, "_blank", "noopener,noreferrer");
+      return;
+    }
+
+    const browseButton = target.closest(".workbench-browse");
+    if (browseButton) {
+      const id = browseButton.getAttribute("data-tool-id");
+      const kind = browseButton.getAttribute("data-path-kind") || "directory";
+      const pathTarget = browseButton.getAttribute("data-path-target");
+      if (!id || !pathTarget) return;
+      try {
+        const selected = await bridgeRequest("/api/editor/browse", {
+          method: "POST",
+          body: JSON.stringify({
+            kind,
+            title: browseButton.textContent?.trim() || "选择路径",
+          }),
+        });
+        await bridgeRequest("/api/editor/tool-path", {
+          method: "POST",
+          body: JSON.stringify({
+            id,
+            target: pathTarget,
+            value: selected.path,
+          }),
+        });
+        await loadWorkbench();
+        setStatus("Path Saved", "ok");
+      } catch (error) {
+        alert(`选择路径失败：${error.message}`);
+      }
       return;
     }
 

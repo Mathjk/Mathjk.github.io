@@ -15,9 +15,17 @@
       ],
       "backend": {
         "windows": {
-          "path": "windows-launchers\\Start-GPU-Dashboard.cmd"
+          "path": "windows-launchers\\Start-GPU-Dashboard.cmd",
+          "env": {}
         }
       },
+      "pathOptions": [
+        {
+          "label": "选择 GPU Dashboard 目录",
+          "kind": "directory",
+          "target": "backend.windows.env.GPU_DASHBOARD_DIR"
+        }
+      ],
       "launch": {
         "linux": {
           "command": [
@@ -45,9 +53,17 @@
       ],
       "backend": {
         "windows": {
-          "path": "windows-launchers\\Start-Overleaf-Local.cmd"
+          "path": "windows-launchers\\Start-Overleaf-Local.cmd",
+          "env": {}
         }
       },
+      "pathOptions": [
+        {
+          "label": "选择 Overleaf 启动脚本",
+          "kind": "file",
+          "target": "backend.windows.env.OVERLEAF_TUNNEL_CMD"
+        }
+      ],
       "launch": {
         "linux": {
           "command": [

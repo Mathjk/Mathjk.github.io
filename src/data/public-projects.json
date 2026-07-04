@@ -2,25 +2,40 @@
   {
     "id": "textstreampro",
     "name": "TextStreamPro",
-    "description": "自用文本流处理工具。当前先作为本地工具台入口，后续可以补截图、说明和发布方式。",
+    "description": "文本规则流工具，支持配置方案、顺序替换、正则规则和 Markdown 批量处理。",
     "status": "Local",
-    "links": [],
+    "links": [
+      {
+        "label": "Web",
+        "href": "/tools/textstreampro/"
+      }
+    ],
     "skills": ["Text", "Utility"]
   },
   {
-    "id": "md2tex",
-    "name": "md2tex",
-    "description": "Markdown 到 TeX 的转换工具，适合沉淀为公开工具说明页。",
+    "id": "convert-title",
+    "name": "convert_title",
+    "description": "标题转换工具，保留非法字符清理、虚词配置和标题大小写转换。",
     "status": "Local",
-    "links": [],
-    "skills": ["Markdown", "LaTeX"]
+    "links": [
+      {
+        "label": "Web",
+        "href": "/tools/convert-title/"
+      }
+    ],
+    "skills": ["Title", "Text"]
   },
   {
     "id": "tex-diff",
     "name": "tex_diff",
-    "description": "TeX 文档差异对比工具。后续可以补充使用场景和示例。",
+    "description": "TeX 文档差异对比工具，区分内容变化和空白变化。",
     "status": "Local",
-    "links": [],
+    "links": [
+      {
+        "label": "Web",
+        "href": "/tools/tex-diff/"
+      }
+    ],
     "skills": ["TeX", "Diff"]
   }
 ]

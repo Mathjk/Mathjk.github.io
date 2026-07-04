@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import copy
+import difflib
 import json
 import logging
 import mimetypes
@@ -29,6 +30,12 @@ WEBSITE_ROOT = Path(os.environ.get("MYWEB_WEBSITE_ROOT", SITE_ROOT / "dist")).re
 METADATA_PATH = ROOT_DIR / "app_metadata.json"
 TOOL_CONFIG_PATH = Path(os.environ.get("MYWEB_TOOL_CONFIG", ROOT_DIR / "local_tools.json")).resolve()
 TOOL_PATHS_PATH = Path(os.environ.get("MYWEB_TOOL_PATHS", ROOT_DIR / ".local" / "tool_paths.json")).resolve()
+CONVERT_TITLE_CONFIG_PATH = Path(
+    os.environ.get("MYWEB_CONVERT_TITLE_CONFIG", APP_ROOT / "formatter_config.json")
+).resolve()
+TEXTSTREAM_PROFILES_PATH = Path(
+    os.environ.get("MYWEB_TEXTSTREAM_PROFILES", APP_ROOT / "replacer_profiles.json")
+).resolve()
 RESOURCE_CONFIG_PATH = Path(
     os.environ.get("MYWEB_RESOURCE_CONFIG", SITE_ROOT / "src" / "data" / "resources.json")
 ).resolve()
@@ -37,6 +44,47 @@ TOKEN_PATH = Path(os.environ.get("MYWEB_TOKEN_PATH", ROOT_DIR / ".local" / "edit
 HOST = os.environ.get("MYWEB_HOST", "127.0.0.1")
 PORT = int(os.environ.get("MYWEB_PORT", "3939"))
 LOG_PATH = ROOT_DIR / "local_app_server.log"
+EXCLUDED_SCAN_APP_IDS = {
+    item.strip().lower()
+    for item in os.environ.get("MYWEB_EXCLUDED_APPS", "md2tex,sync_tool").split(",")
+    if item.strip()
+}
+DEFAULT_STOP_WORDS = {
+    "a",
+    "an",
+    "and",
+    "as",
+    "at",
+    "but",
+    "by",
+    "for",
+    "from",
+    "in",
+    "into",
+    "nor",
+    "of",
+    "off",
+    "on",
+    "onto",
+    "or",
+    "out",
+    "over",
+    "so",
+    "the",
+    "to",
+    "up",
+    "vs",
+    "with",
+    "yet",
+}
+DEFAULT_TEXTSTREAM_RULES = [
+    {"find": r"\( ", "replace": "$", "use_regex": False, "active": True},
+    {"find": r" \)", "replace": "$", "use_regex": False, "active": True},
+    {"find": r"\(", "replace": "$", "use_regex": False, "active": True},
+    {"find": r"\)", "replace": "$", "use_regex": False, "active": True},
+    {"find": r"\[", "replace": "$$", "use_regex": False, "active": True},
+    {"find": r"\]", "replace": "$$", "use_regex": False, "active": True},
+]
 
 
 logging.basicConfig(
@@ -174,6 +222,201 @@ def load_tool_config() -> dict:
 def load_tool_path_overrides() -> dict:
     payload = read_json_file(TOOL_PATHS_PATH, {})
     return payload if isinstance(payload, dict) else {}
+
+
+def load_convert_title_config() -> dict:
+    payload = read_json_file(CONVERT_TITLE_CONFIG_PATH, {})
+    stop_words = payload.get("stop_words") if isinstance(payload, dict) else None
+    if not isinstance(stop_words, list):
+        stop_words = sorted(DEFAULT_STOP_WORDS)
+    return {"stop_words": sorted({str(item).strip().lower() for item in stop_words if str(item).strip()})}
+
+
+def save_convert_title_config(payload: dict) -> dict:
+    stop_words = payload.get("stop_words")
+    if isinstance(stop_words, str):
+        stop_words = re.split(r"[\s,，、]+", stop_words)
+    if not isinstance(stop_words, list):
+        raise ValueError("stop_words must be a list or string")
+    config = {"stop_words": sorted({str(item).strip().lower() for item in stop_words if str(item).strip()})}
+    write_json_file(CONVERT_TITLE_CONFIG_PATH, config)
+    return config
+
+
+def convert_title_text(text: str, stop_words: list[str] | None = None) -> dict:
+    clean_text = str(text or "").replace("\n", " ").replace("\r", "")
+    clean_text = re.sub(r'[\\/:*?"<>|]', "", clean_text)
+    clean_text = " ".join(clean_text.split())
+    active_stop_words = {str(item).strip().lower() for item in (stop_words or load_convert_title_config()["stop_words"])}
+
+    words = clean_text.split()
+    processed_words = []
+    for index, word in enumerate(words):
+        lower_word = word.lower()
+        is_start_or_end = index == 0 or index == len(words) - 1
+        if is_start_or_end or lower_word not in active_stop_words:
+            processed_words.append(word.capitalize())
+        else:
+            processed_words.append(lower_word)
+    return {"input": text, "cleaned": clean_text, "output": " ".join(processed_words)}
+
+
+def tokenize_tex_text(text: str) -> list[str]:
+    return [token for token in re.split(r"(\s+)", str(text or "")) if token]
+
+
+def tex_diff_segments(left_text: str, right_text: str) -> dict:
+    left_tokens = tokenize_tex_text(left_text)
+    right_tokens = tokenize_tex_text(right_text)
+    matcher = difflib.SequenceMatcher(None, left_tokens, right_tokens)
+    left_segments = []
+    right_segments = []
+
+    for tag, i1, i2, j1, j2 in matcher.get_opcodes():
+        chunk_left = "".join(left_tokens[i1:i2])
+        chunk_right = "".join(right_tokens[j1:j2])
+        if tag == "equal":
+            left_segments.append({"text": chunk_left, "tag": "equal"})
+            right_segments.append({"text": chunk_right, "tag": "equal"})
+        elif tag == "delete":
+            left_segments.append(
+                {"text": chunk_left, "tag": "del_non_essential" if not chunk_left.strip() else "del_essential"}
+            )
+        elif tag == "insert":
+            right_segments.append(
+                {"text": chunk_right, "tag": "ins_non_essential" if not chunk_right.strip() else "ins_essential"}
+            )
+        elif tag == "replace":
+            left_segments.append(
+                {"text": chunk_left, "tag": "del_non_essential" if not chunk_left.strip() else "del_essential"}
+            )
+            right_segments.append(
+                {"text": chunk_right, "tag": "ins_non_essential" if not chunk_right.strip() else "ins_essential"}
+            )
+
+    return {"left": left_segments, "right": right_segments}
+
+
+def default_textstream_profiles() -> dict:
+    return {
+        "current_id": "default",
+        "profiles": {
+            "default": {
+                "name": "默认 LaTeX 清洗",
+                "rules": copy.deepcopy(DEFAULT_TEXTSTREAM_RULES),
+            }
+        },
+    }
+
+
+def normalize_textstream_rule(rule: dict) -> dict:
+    return {
+        "find": str(rule.get("find", "")),
+        "replace": str(rule.get("replace", "")),
+        "use_regex": bool(rule.get("use_regex", False)),
+        "active": bool(rule.get("active", True)),
+    }
+
+
+def normalize_textstream_profiles(payload: dict) -> dict:
+    if not isinstance(payload, dict):
+        payload = default_textstream_profiles()
+    profiles = payload.get("profiles") if isinstance(payload.get("profiles"), dict) else {}
+    normalized_profiles = {}
+    for profile_id, profile in profiles.items():
+        if not isinstance(profile, dict):
+            continue
+        rules = profile.get("rules") if isinstance(profile.get("rules"), list) else []
+        normalized_profiles[str(profile_id)] = {
+            "name": str(profile.get("name") or profile_id),
+            "rules": [normalize_textstream_rule(rule) for rule in rules if isinstance(rule, dict)],
+        }
+    if not normalized_profiles:
+        normalized_profiles = default_textstream_profiles()["profiles"]
+    current_id = str(payload.get("current_id") or next(iter(normalized_profiles)))
+    if current_id not in normalized_profiles:
+        current_id = next(iter(normalized_profiles))
+    return {"current_id": current_id, "profiles": normalized_profiles}
+
+
+def load_textstream_profiles() -> dict:
+    return normalize_textstream_profiles(read_json_file(TEXTSTREAM_PROFILES_PATH, default_textstream_profiles()))
+
+
+def save_textstream_profiles(payload: dict) -> dict:
+    profiles = normalize_textstream_profiles(payload)
+    write_json_file(TEXTSTREAM_PROFILES_PATH, profiles)
+    return profiles
+
+
+def textstream_process_text(text: str, profile_id: str | None = None, rules: list[dict] | None = None) -> dict:
+    profiles = load_textstream_profiles()
+    if rules is None:
+        active_profile_id = profile_id if profile_id in profiles["profiles"] else profiles["current_id"]
+        rules = profiles["profiles"][active_profile_id]["rules"]
+
+    current_text = str(text or "")
+    if not current_text:
+        return {"output": "", "logs": ["文本为空"], "applied": 0}
+
+    logs = []
+    count = 0
+    for index, rule in enumerate([normalize_textstream_rule(item) for item in rules if isinstance(item, dict)]):
+        if not rule.get("active", True) or not rule.get("find"):
+            continue
+        try:
+            if rule["use_regex"]:
+                current_text = re.sub(rule["find"], rule["replace"], current_text)
+                count += 1
+            elif rule["find"] in current_text:
+                current_text = current_text.replace(rule["find"], rule["replace"])
+                count += 1
+        except Exception as exc:
+            logs.append(f"规则 {index + 1} 错误: {exc}")
+    logs.append(f"共应用 {count} 条规则")
+    return {"output": current_text, "logs": logs, "applied": count}
+
+
+def discover_markdown_files(raw_input: str) -> list[Path]:
+    paths = [item.strip().strip('"').strip("'") for item in str(raw_input or "").split(" | ") if item.strip()]
+    files = set()
+    for path_value in paths:
+        path = Path(path_value).expanduser()
+        if path.is_dir():
+            for file_path in path.rglob("*.md"):
+                if file_path.is_file():
+                    files.add(file_path.resolve())
+        elif path.is_file() and path.suffix.lower() == ".md":
+            files.add(path.resolve())
+    return sorted(files)
+
+
+def textstream_batch(payload: dict) -> dict:
+    files = discover_markdown_files(str(payload.get("paths", "")))
+    apply_changes = bool(payload.get("apply", False))
+    profile_id = str(payload.get("profileId", "") or "")
+    changed = skipped = errors = 0
+    results = []
+
+    for file_path in files:
+        try:
+            content = file_path.read_text(encoding="utf-8")
+            processed = textstream_process_text(content, profile_id=profile_id)
+            new_content = processed["output"]
+            if new_content != content:
+                changed += 1
+                if apply_changes:
+                    file_path.write_text(new_content, encoding="utf-8")
+                status = "changed" if apply_changes else "would_change"
+            else:
+                skipped += 1
+                status = "skipped"
+            results.append({"path": str(file_path), "status": status})
+        except Exception as exc:
+            errors += 1
+            results.append({"path": str(file_path), "status": "error", "error": str(exc)})
+
+    return {"files": len(files), "changed": changed, "skipped": skipped, "errors": errors, "results": results[:200]}
 
 
 def current_platform_key() -> str:
@@ -563,6 +806,8 @@ def scan_apps() -> list[dict]:
         slogan = meta.get("slogan") or f"{title} 本地工具"
         kind_name = meta.get("kind_name") or "本地应用"
         app_id = meta.get("id") or slugify(meta_key)
+        if app_id.lower() in EXCLUDED_SCAN_APP_IDS or group_name.lower() in EXCLUDED_SCAN_APP_IDS:
+            continue
         base_dir = f"myapp/{relative_parent}".strip("/") if relative_parent else "myapp"
 
         apps.append(
@@ -658,6 +903,7 @@ def configured_tools_as_public() -> list[dict]:
         tool = apply_tool_path_overrides(raw_tool)
         launch_action = select_platform_action(tool)
         backend_action = select_backend_action(tool)
+        tool_url = select_tool_url(tool)
         platforms = []
         for key in ("windows", "linux", "mac", "default"):
             if key in raw_tool or key in (raw_tool.get("launch") or {}) or key in (raw_tool.get("backend") or {}):
@@ -671,10 +917,10 @@ def configured_tools_as_public() -> list[dict]:
                 "title": tool.get("title") or tool["id"],
                 "description": tool.get("description", ""),
                 "tags": split_tags(tool.get("tags")),
-                "url": select_tool_url(tool),
+                "url": tool_url,
                 "port": tool.get("port"),
                 "platforms": platforms,
-                "canLaunch": bool(launch_action or backend_action),
+                "canLaunch": bool(tool_url or launch_action or backend_action),
                 "hasBackend": bool(backend_action),
                 "openDelaySeconds": tool.get("openDelaySeconds", 1),
                 "pathOptions": [
@@ -905,6 +1151,22 @@ class AppHandler(BaseHTTPRequestHandler):
             )
             return
 
+        if route == "/api/web-tools/convert-title/config":
+            try:
+                require_auth(self)
+                self.respond_json({"ok": True, "config": load_convert_title_config(), "path": str(CONVERT_TITLE_CONFIG_PATH)})
+            except PermissionError as exc:
+                self.respond_json({"ok": False, "error": str(exc)}, status=HTTPStatus.UNAUTHORIZED)
+            return
+
+        if route == "/api/web-tools/textstream/profiles":
+            try:
+                require_auth(self)
+                self.respond_json({"ok": True, "data": load_textstream_profiles(), "path": str(TEXTSTREAM_PROFILES_PATH)})
+            except PermissionError as exc:
+                self.respond_json({"ok": False, "error": str(exc)}, status=HTTPStatus.UNAUTHORIZED)
+            return
+
         if route == "/api/editor/state":
             self.respond_json(
                 {
@@ -942,6 +1204,96 @@ class AppHandler(BaseHTTPRequestHandler):
                 self.respond_json({"ok": False, "error": str(exc)}, status=HTTPStatus.UNAUTHORIZED)
             except Exception as exc:
                 logger.exception("Resource save failed")
+                self.respond_json({"ok": False, "error": str(exc)}, status=HTTPStatus.BAD_REQUEST)
+            return
+
+        if route == "/api/web-tools/convert-title/process":
+            try:
+                require_auth(self)
+                payload = parse_request_body(self)
+                self.respond_json(
+                    {
+                        "ok": True,
+                        "result": convert_title_text(
+                            str(payload.get("text", "")),
+                            payload.get("stopWords") if isinstance(payload.get("stopWords"), list) else None,
+                        ),
+                    }
+                )
+            except PermissionError as exc:
+                self.respond_json({"ok": False, "error": str(exc)}, status=HTTPStatus.UNAUTHORIZED)
+            except Exception as exc:
+                logger.exception("convert_title process failed")
+                self.respond_json({"ok": False, "error": str(exc)}, status=HTTPStatus.BAD_REQUEST)
+            return
+
+        if route == "/api/web-tools/convert-title/config":
+            try:
+                require_auth(self)
+                config = save_convert_title_config(parse_request_body(self))
+                self.respond_json({"ok": True, "config": config, "path": str(CONVERT_TITLE_CONFIG_PATH)})
+            except PermissionError as exc:
+                self.respond_json({"ok": False, "error": str(exc)}, status=HTTPStatus.UNAUTHORIZED)
+            except Exception as exc:
+                logger.exception("convert_title config save failed")
+                self.respond_json({"ok": False, "error": str(exc)}, status=HTTPStatus.BAD_REQUEST)
+            return
+
+        if route == "/api/web-tools/tex-diff":
+            try:
+                payload = parse_request_body(self)
+                self.respond_json(
+                    {
+                        "ok": True,
+                        "diff": tex_diff_segments(str(payload.get("original", "")), str(payload.get("modified", ""))),
+                    }
+                )
+            except Exception as exc:
+                logger.exception("tex_diff failed")
+                self.respond_json({"ok": False, "error": str(exc)}, status=HTTPStatus.BAD_REQUEST)
+            return
+
+        if route == "/api/web-tools/textstream/process":
+            try:
+                require_auth(self)
+                payload = parse_request_body(self)
+                self.respond_json(
+                    {
+                        "ok": True,
+                        "result": textstream_process_text(
+                            str(payload.get("text", "")),
+                            profile_id=str(payload.get("profileId", "") or ""),
+                            rules=payload.get("rules") if isinstance(payload.get("rules"), list) else None,
+                        ),
+                    }
+                )
+            except PermissionError as exc:
+                self.respond_json({"ok": False, "error": str(exc)}, status=HTTPStatus.UNAUTHORIZED)
+            except Exception as exc:
+                logger.exception("TextStream process failed")
+                self.respond_json({"ok": False, "error": str(exc)}, status=HTTPStatus.BAD_REQUEST)
+            return
+
+        if route == "/api/web-tools/textstream/profiles":
+            try:
+                require_auth(self)
+                data = save_textstream_profiles(parse_request_body(self))
+                self.respond_json({"ok": True, "data": data, "path": str(TEXTSTREAM_PROFILES_PATH)})
+            except PermissionError as exc:
+                self.respond_json({"ok": False, "error": str(exc)}, status=HTTPStatus.UNAUTHORIZED)
+            except Exception as exc:
+                logger.exception("TextStream profiles save failed")
+                self.respond_json({"ok": False, "error": str(exc)}, status=HTTPStatus.BAD_REQUEST)
+            return
+
+        if route == "/api/web-tools/textstream/batch":
+            try:
+                require_auth(self)
+                self.respond_json({"ok": True, "batch": textstream_batch(parse_request_body(self))})
+            except PermissionError as exc:
+                self.respond_json({"ok": False, "error": str(exc)}, status=HTTPStatus.UNAUTHORIZED)
+            except Exception as exc:
+                logger.exception("TextStream batch failed")
                 self.respond_json({"ok": False, "error": str(exc)}, status=HTTPStatus.BAD_REQUEST)
             return
 

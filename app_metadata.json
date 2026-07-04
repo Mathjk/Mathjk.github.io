@@ -1,0 +1,17 @@
+{
+  "TextStreamPro": {
+    "title": "TextStreamPro",
+    "slogan": "文本流处理工具",
+    "kind_name": "本地应用&效率工具"
+  },
+  "convert_title": {
+    "title": "convert_title",
+    "slogan": "标题转换小工具",
+    "kind_name": "本地应用&文本处理"
+  },
+  "tex_diff": {
+    "title": "tex_diff",
+    "slogan": "TeX 差异对比",
+    "kind_name": "本地应用&开发工具"
+  }
+}

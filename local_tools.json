@@ -13,19 +13,6 @@
         "GPU",
         "Port 8765"
       ],
-      "backend": {
-        "windows": {
-          "path": "windows-launchers\\Start-GPU-Dashboard.cmd",
-          "env": {}
-        }
-      },
-      "pathOptions": [
-        {
-          "label": "选择 GPU Dashboard 目录",
-          "kind": "directory",
-          "target": "backend.windows.env.GPU_DASHBOARD_DIR"
-        }
-      ],
       "launch": {
         "linux": {
           "command": [
@@ -34,6 +21,42 @@
           "cwd": "/home/jk/gpu-dashboard"
         }
       }
+    },
+    {
+      "id": "textstreampro-web",
+      "title": "TextStreamPro Web",
+      "description": "网页版文本规则流，读取 myapp/replacer_profiles.json，支持配置方案、规则替换和 Markdown 批量处理。",
+      "kind": "web",
+      "url": "http://127.0.0.1:3939/tools/textstreampro/",
+      "tags": [
+        "Local Web",
+        "Text",
+        "Rules"
+      ]
+    },
+    {
+      "id": "convert-title-web",
+      "title": "convert_title Web",
+      "description": "网页版标题转换工具，保留非法字符清理、虚词小写和标题大小写转换。",
+      "kind": "web",
+      "url": "http://127.0.0.1:3939/tools/convert-title/",
+      "tags": [
+        "Local Web",
+        "Title",
+        "Text"
+      ]
+    },
+    {
+      "id": "tex-diff-web",
+      "title": "tex_diff Web",
+      "description": "网页版 TeX 智能文本比对，按空白 token 拆分并区分内容变化与空白变化。",
+      "kind": "web",
+      "url": "http://127.0.0.1:3939/tools/tex-diff/",
+      "tags": [
+        "Local Web",
+        "TeX",
+        "Diff"
+      ]
     },
     {
       "id": "overleaf-local-8080",

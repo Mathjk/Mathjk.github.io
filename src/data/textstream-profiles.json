@@ -1,0 +1,98 @@
+{
+  "current_id": "default",
+  "profiles": {
+    "default": {
+      "name": "标准ai -> markdown 清洗",
+      "rules": [
+        {
+          "find": "\\( ",
+          "replace": "$",
+          "use_regex": false,
+          "active": true
+        },
+        {
+          "find": " \\)",
+          "replace": "$",
+          "use_regex": false,
+          "active": true
+        },
+        {
+          "find": "\\(",
+          "replace": "$",
+          "use_regex": false,
+          "active": true
+        },
+        {
+          "find": "\\)",
+          "replace": "$",
+          "use_regex": false,
+          "active": true
+        },
+        {
+          "find": "\\[",
+          "replace": "$$",
+          "use_regex": false,
+          "active": true
+        },
+        {
+          "find": "\\]",
+          "replace": "$$",
+          "use_regex": false,
+          "active": true
+        },
+        {
+          "find": "$\\hfill \\blacksquare$",
+          "replace": "",
+          "use_regex": false,
+          "active": true
+        },
+        {
+          "find": "`",
+          "replace": "$",
+          "use_regex": false,
+          "active": false
+        }
+      ]
+    },
+    "e434af23": {
+      "name": "去处**",
+      "rules": [
+        {
+          "find": "**",
+          "replace": "",
+          "use_regex": false,
+          "active": true
+        }
+      ]
+    },
+    "6678f1bd": {
+      "name": "gpt5.2 -> md",
+      "rules": [
+        {
+          "find": " (",
+          "replace": "$",
+          "use_regex": false,
+          "active": true
+        },
+        {
+          "find": ") ",
+          "replace": "$",
+          "use_regex": false,
+          "active": true
+        },
+        {
+          "find": "[",
+          "replace": "$$",
+          "use_regex": false,
+          "active": true
+        },
+        {
+          "find": "]",
+          "replace": "$$",
+          "use_regex": false,
+          "active": true
+        }
+      ]
+    }
+  }
+}

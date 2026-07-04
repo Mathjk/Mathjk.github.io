@@ -783,6 +783,9 @@ def create_note(payload: dict) -> dict:
 
 
 def scan_apps() -> list[dict]:
+    if os.environ.get("MYWEB_ENABLE_EXE_SCAN", "").strip().lower() not in {"1", "true", "yes"}:
+        return []
+
     metadata = load_metadata()
     grouped: dict[tuple[str, str], list[Path]] = {}
 

@@ -4,10 +4,10 @@ import ToolLayout from "../../../layouts/ToolLayout.astro";
 
 <ToolLayout
   title="tex_diff"
-  subtitle="TeX 文本差异比对，保留原工具的内容变化与空白变化分类。"
+  subtitle="TeX 文本差异比对，保留原工具的内容变化与空白变化分类。默认在浏览器内完成，不需要本地桥接或 token。"
   eyebrow="TeX Utility"
 >
-  <div id="texDiffApp" data-bridge-url="http://127.0.0.1:3939" class="space-y-6">
+  <div id="texDiffApp" class="space-y-6">
     <div class="grid grid-cols-1 gap-5 lg:grid-cols-2">
       <section class="rounded-2xl border border-gray-200 bg-white p-5">
         <div class="flex items-center justify-between">
@@ -68,29 +68,62 @@ import ToolLayout from "../../../layouts/ToolLayout.astro";
   </style>
 
   <script>
-    const root = document.getElementById("texDiffApp");
-    const bridgeUrl = root?.dataset.bridgeUrl || "http://127.0.0.1:3939";
     const statusNode = document.getElementById("toolBridgeStatus");
     const originalNode = document.getElementById("originalText");
     const modifiedNode = document.getElementById("modifiedText");
     const leftResult = document.getElementById("leftResult");
     const rightResult = document.getElementById("rightResult");
 
-    function setStatus(text, ok = false) {
+    function setStatus(text, ok = true) {
       if (!statusNode) return;
       statusNode.textContent = text;
       statusNode.className = `mt-2 font-mono text-xs font-semibold ${ok ? "text-emerald-700" : "text-amber-700"}`;
     }
 
-    async function request(path, body) {
-      const response = await fetch(`${bridgeUrl}${path}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      const data = await response.json();
-      if (!response.ok || !data.ok) throw new Error(data.error || `HTTP ${response.status}`);
-      return data;
+    function tokenize(text) {
+      return String(text || "").split(/(\s+)/).filter(Boolean);
+    }
+
+    function commonPrefix(left, right) {
+      let index = 0;
+      while (index < left.length && index < right.length && left[index] === right[index]) index += 1;
+      return index;
+    }
+
+    function commonSuffix(left, right, prefixLength) {
+      let count = 0;
+      while (
+        count < left.length - prefixLength &&
+        count < right.length - prefixLength &&
+        left[left.length - 1 - count] === right[right.length - 1 - count]
+      ) {
+        count += 1;
+      }
+      return count;
+    }
+
+    function diffSegments(original, modified) {
+      const left = tokenize(original);
+      const right = tokenize(modified);
+      const prefix = commonPrefix(left, right);
+      const suffix = commonSuffix(left, right, prefix);
+      const leftSegments = [];
+      const rightSegments = [];
+
+      const pushEqual = (target, tokens) => {
+        if (tokens.length) target.push({ text: tokens.join(""), tag: "equal" });
+      };
+      const pushChanged = (target, tokens, tag) => {
+        if (tokens.length) target.push({ text: tokens.join(""), tag: tokens.join("").trim() ? tag : tag.replace("essential", "non_essential") });
+      };
+
+      pushEqual(leftSegments, left.slice(0, prefix));
+      pushEqual(rightSegments, right.slice(0, prefix));
+      pushChanged(leftSegments, left.slice(prefix, left.length - suffix), "del_essential");
+      pushChanged(rightSegments, right.slice(prefix, right.length - suffix), "ins_essential");
+      pushEqual(leftSegments, suffix ? left.slice(left.length - suffix) : []);
+      pushEqual(rightSegments, suffix ? right.slice(right.length - suffix) : []);
+      return { left: leftSegments, right: rightSegments };
     }
 
     function renderSegments(target, segments) {
@@ -106,19 +139,11 @@ import ToolLayout from "../../../layouts/ToolLayout.astro";
       }
     }
 
-    document.getElementById("runDiff")?.addEventListener("click", async () => {
-      try {
-        const data = await request("/api/web-tools/tex-diff", {
-          original: originalNode?.value || "",
-          modified: modifiedNode?.value || "",
-        });
-        renderSegments(leftResult, data.diff.left);
-        renderSegments(rightResult, data.diff.right);
-        setStatus("Online", true);
-      } catch (error) {
-        setStatus("Offline");
-        alert(`比对失败：${error.message}`);
-      }
+    document.getElementById("runDiff")?.addEventListener("click", () => {
+      const result = diffSegments(originalNode?.value || "", modifiedNode?.value || "");
+      renderSegments(leftResult, result.left);
+      renderSegments(rightResult, result.right);
+      setStatus("Ready");
     });
 
     document.getElementById("clearDiff")?.addEventListener("click", () => {
@@ -135,8 +160,6 @@ import ToolLayout from "../../../layouts/ToolLayout.astro";
       });
     });
 
-    fetch(`${bridgeUrl}/api/health`)
-      .then((response) => setStatus(response.ok ? "Online" : "Offline", response.ok))
-      .catch(() => setStatus("Offline"));
+    setStatus("Ready");
   </script>
 </ToolLayout>

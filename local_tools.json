@@ -3,7 +3,7 @@
     {
       "id": "gpu-dashboard",
       "title": "GPU Dashboard",
-      "description": "Linux/WSL 端启动 /home/jk/gpu-dashboard/start.sh，然后打开本地 GPU 控制台。",
+      "description": "Windows 端直接启动本地 GPU Dashboard；Linux 端启动 /home/jk/gpu-dashboard/start.sh，然后打开本地 GPU 控制台。",
       "kind": "web",
       "url": "http://127.0.0.1:8765/",
       "port": 8765,
@@ -13,15 +13,12 @@
         "GPU",
         "Port 8765"
       ],
-      "launch": {
+      "backend": {
         "windows": {
-          "command": [
-            "wsl.exe",
-            "bash",
-            "-lc",
-            "cd /home/jk/gpu-dashboard && (./stop.sh >/dev/null 2>&1 || true) && HOST=0.0.0.0 PORT=8765 ./start.sh"
-          ]
-        },
+          "path": "windows-launchers\\Start-GPU-Dashboard.cmd"
+        }
+      },
+      "launch": {
         "linux": {
           "command": [
             "./start.sh"
@@ -46,17 +43,12 @@
         "Port 80",
         "Port 8080"
       ],
-      "launch": {
+      "backend": {
         "windows": {
-          "command": [
-            "powershell.exe",
-            "-NoProfile",
-            "-ExecutionPolicy",
-            "Bypass",
-            "-Command",
-            "$src = (wsl.exe wslpath -w /home/jk/overleaf/windows-launcher/Start-Overleaf-Tunnel-Key.cmd).Trim(); $dst = Join-Path $env:TEMP 'Start-Overleaf-Tunnel-Key.cmd'; Copy-Item -LiteralPath $src -Destination $dst -Force; Start-Process -FilePath $dst"
-          ]
-        },
+          "path": "windows-launchers\\Start-Overleaf-Local.cmd"
+        }
+      },
+      "launch": {
         "linux": {
           "command": [
             "bin/up",

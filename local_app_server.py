@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import copy
 import json
 import logging
 import mimetypes
@@ -27,6 +28,7 @@ APP_ROOT = Path(os.environ.get("MYWEB_APP_ROOT", ROOT_DIR / "myapp")).resolve()
 WEBSITE_ROOT = Path(os.environ.get("MYWEB_WEBSITE_ROOT", SITE_ROOT / "dist")).resolve()
 METADATA_PATH = ROOT_DIR / "app_metadata.json"
 TOOL_CONFIG_PATH = Path(os.environ.get("MYWEB_TOOL_CONFIG", ROOT_DIR / "local_tools.json")).resolve()
+TOOL_PATHS_PATH = Path(os.environ.get("MYWEB_TOOL_PATHS", ROOT_DIR / ".local" / "tool_paths.json")).resolve()
 RESOURCE_CONFIG_PATH = Path(
     os.environ.get("MYWEB_RESOURCE_CONFIG", SITE_ROOT / "src" / "data" / "resources.json")
 ).resolve()
@@ -167,6 +169,11 @@ def load_tool_config() -> dict:
         payload.setdefault("tools", [])
         return payload
     return {"tools": []}
+
+
+def load_tool_path_overrides() -> dict:
+    payload = read_json_file(TOOL_PATHS_PATH, {})
+    return payload if isinstance(payload, dict) else {}
 
 
 def current_platform_key() -> str:
@@ -407,7 +414,7 @@ def read_target_value(tool: dict, target: str) -> str:
     return str(cursor or "")
 
 
-def write_target_value(tool: dict, target: str, value: str) -> None:
+def validate_path_option_target(target: str) -> tuple[str, str, str]:
     parts = target.split(".")
     if len(parts) != 4 or parts[0] not in {"backend", "launch"} or parts[2] != "env":
         raise ValueError("unsupported path option target")
@@ -416,9 +423,54 @@ def write_target_value(tool: dict, target: str, value: str) -> None:
         raise ValueError("unsupported path option platform")
     if not re.fullmatch(r"[A-Z0-9_]+", env_key):
         raise ValueError("unsupported environment variable name")
+    return block, platform, env_key
+
+
+def write_target_value(tool: dict, target: str, value: str) -> None:
+    block, platform, env_key = validate_path_option_target(target)
 
     action = tool.setdefault(block, {}).setdefault(platform, {})
     action.setdefault("env", {})[env_key] = value
+
+
+def declared_path_option_targets(tool: dict) -> set[str]:
+    options = tool.get("pathOptions") if isinstance(tool.get("pathOptions"), list) else []
+    return {
+        str(option.get("target", "")).strip()
+        for option in options
+        if isinstance(option, dict) and str(option.get("target", "")).strip()
+    }
+
+
+def apply_tool_path_overrides(tool: dict) -> dict:
+    hydrated_tool = copy.deepcopy(tool)
+    tool_id = str(hydrated_tool.get("id", "")).strip()
+    overrides = load_tool_path_overrides().get(tool_id, {})
+    if not isinstance(overrides, dict):
+        return hydrated_tool
+
+    declared_targets = declared_path_option_targets(hydrated_tool)
+    for target, value in overrides.items():
+        target = str(target).strip()
+        value = str(value).strip()
+        if not target or target not in declared_targets or not value:
+            continue
+        try:
+            write_target_value(hydrated_tool, target, value)
+        except ValueError:
+            logger.warning("Ignoring invalid local tool path target: %s", target)
+    return hydrated_tool
+
+
+def write_tool_path_override(tool_id: str, target: str, value: str) -> None:
+    validate_path_option_target(target)
+    overrides = load_tool_path_overrides()
+    tool_overrides = overrides.setdefault(tool_id, {})
+    if not isinstance(tool_overrides, dict):
+        tool_overrides = {}
+        overrides[tool_id] = tool_overrides
+    tool_overrides[target] = value
+    write_json_file(TOOL_PATHS_PATH, overrides)
 
 
 def update_tool_path_option(payload: dict) -> dict:
@@ -435,9 +487,8 @@ def update_tool_path_option(payload: dict) -> dict:
         options = tool.get("pathOptions") if isinstance(tool.get("pathOptions"), list) else []
         if not any(isinstance(option, dict) and option.get("target") == target for option in options):
             raise ValueError("path option is not declared for this tool")
-        write_target_value(tool, target, value)
-        write_json_file(TOOL_CONFIG_PATH, config)
-        return tool
+        write_tool_path_override(tool_id, target, value)
+        return apply_tool_path_overrides(tool)
 
     raise FileNotFoundError(tool_id)
 
@@ -604,8 +655,9 @@ def configured_tools_as_public() -> list[dict]:
         if not isinstance(raw_tool, dict) or not raw_tool.get("id"):
             continue
 
-        launch_action = select_platform_action(raw_tool)
-        backend_action = select_backend_action(raw_tool)
+        tool = apply_tool_path_overrides(raw_tool)
+        launch_action = select_platform_action(tool)
+        backend_action = select_backend_action(tool)
         platforms = []
         for key in ("windows", "linux", "mac", "default"):
             if key in raw_tool or key in (raw_tool.get("launch") or {}) or key in (raw_tool.get("backend") or {}):
@@ -615,24 +667,24 @@ def configured_tools_as_public() -> list[dict]:
             {
                 "id": f"config:{raw_tool['id']}",
                 "source": "config",
-                "kind": raw_tool.get("kind", "app"),
-                "title": raw_tool.get("title") or raw_tool["id"],
-                "description": raw_tool.get("description", ""),
-                "tags": split_tags(raw_tool.get("tags")),
-                "url": select_tool_url(raw_tool),
-                "port": raw_tool.get("port"),
+                "kind": tool.get("kind", "app"),
+                "title": tool.get("title") or tool["id"],
+                "description": tool.get("description", ""),
+                "tags": split_tags(tool.get("tags")),
+                "url": select_tool_url(tool),
+                "port": tool.get("port"),
                 "platforms": platforms,
                 "canLaunch": bool(launch_action or backend_action),
                 "hasBackend": bool(backend_action),
-                "openDelaySeconds": raw_tool.get("openDelaySeconds", 1),
+                "openDelaySeconds": tool.get("openDelaySeconds", 1),
                 "pathOptions": [
                     {
                         "label": option.get("label", "选择路径"),
                         "kind": option.get("kind", "directory"),
                         "target": option.get("target", ""),
-                        "configured": bool(read_target_value(raw_tool, option.get("target", ""))),
+                        "configured": bool(read_target_value(tool, option.get("target", ""))),
                     }
-                    for option in (raw_tool.get("pathOptions") or [])
+                    for option in (tool.get("pathOptions") or [])
                     if isinstance(option, dict) and option.get("target")
                 ],
             }
@@ -732,7 +784,7 @@ def find_configured_tool(tool_id: str) -> dict | None:
     config = load_tool_config()
     for tool in config.get("tools", []):
         if isinstance(tool, dict) and tool.get("id") == clean_id:
-            return tool
+            return apply_tool_path_overrides(tool)
     return None
 
 
@@ -862,6 +914,7 @@ class AppHandler(BaseHTTPRequestHandler):
                     "authenticated": is_authenticated(self),
                     "resourcesPath": str(RESOURCE_CONFIG_PATH),
                     "toolsPath": str(TOOL_CONFIG_PATH),
+                    "toolPathsPath": str(TOOL_PATHS_PATH),
                     "notesPath": str(NOTES_ROOT),
                 }
             )

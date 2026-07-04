@@ -318,7 +318,7 @@ const workbench = siteConfig.localWorkbench;
       lockButton?.classList.toggle("hidden", !workbenchUnlocked);
       if (authText) {
         authText.textContent = workbenchUnlocked
-          ? `已解锁，可写入 ${state.toolsPath}`
+          ? `已解锁，可写入 ${state.toolsPath}；本机路径保存到 ${state.toolPathsPath}`
           : "桥接服务在线。输入 token 后可以启动本地程序或写入 local_tools.json。";
       }
     } catch {

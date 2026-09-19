@@ -6,40 +6,60 @@ import ThemeToggle from "../components/ThemeToggle.astro";
 const cv = siteConfig.cv;
 ---
 
-<html lang="zh-CN">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width" />
-    <title>CV - {siteConfig.name}</title>
+    <meta name="description" content={`${cv.name} — ${cv.position}, ${cv.department}, ${cv.institution}.`} />
+    <title>{cv.name} | {cv.institution}</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="canonical" href="https://mathjk.github.io/cv/" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Noto+Serif+SC:wght@400;500;600;700;900&display=swap" rel="stylesheet" />
   </head>
   <body>
-    <main class="mx-auto max-w-5xl px-8 py-16 sm:px-12 md:py-24">
-      <a href="/" class="font-mono text-sm text-gray-500 transition-colors hover:text-gray-900">← 返回主页</a>
-      <h1 class="mt-10 text-5xl font-black tracking-tight text-gray-900 sm:text-7xl">CV</h1>
-      <p class="mt-6 max-w-3xl text-lg leading-8 text-gray-600">{cv.summary}</p>
+    <main class="mx-auto max-w-4xl px-6 py-10 sm:px-12 md:py-16">
+      <nav aria-label="Page navigation" class="flex flex-wrap items-center justify-between gap-4 border-b border-gray-200 pb-6">
+        <a href="/" class="font-mono text-sm text-gray-500 transition-colors hover:text-gray-900">← Personal website</a>
+        <span class="font-mono text-xs uppercase tracking-widest text-gray-500">Academic profile</span>
+      </nav>
 
-      <section class="mt-12 rounded-2xl border border-gray-200 bg-gray-50 p-6">
-        <h2 class="text-2xl font-bold text-gray-900">Highlights</h2>
-        <div class="mt-5 flex flex-wrap gap-2">
-          {cv.highlights.map((item) => (
-            <span class="rounded-md bg-gray-900 px-3 py-1.5 font-mono text-xs font-medium text-white">{item}</span>
-          ))}
+      <header class="py-12 sm:py-16">
+        <p class="font-mono text-sm font-medium tracking-wide text-gray-500">{cv.position}</p>
+        <h1 class="mt-4 text-5xl font-bold tracking-tight text-gray-900 sm:text-7xl">{cv.name}</h1>
+        <div class="mt-7 space-y-2 text-base leading-7 text-gray-700 sm:text-lg">
+          <p><a href="https://math.dlut.edu.cn/English/Home.htm" class="underline decoration-gray-300 underline-offset-4 hover:decoration-current">{cv.department}</a></p>
+          <p><a href="https://en.dlut.edu.cn/" class="underline decoration-gray-300 underline-offset-4 hover:decoration-current">{cv.institution}</a></p>
+          <p class="text-sm text-gray-500">{cv.location}</p>
         </div>
+        <p class="mt-7 text-base leading-7 text-gray-700">
+          <span class="mr-2 font-mono text-sm text-gray-500">Email</span>
+          <a href={`mailto:${cv.email}`} class="break-all font-medium underline decoration-gray-300 underline-offset-4 hover:decoration-current">{cv.email}</a>
+        </p>
+      </header>
+
+      <section aria-labelledby="about-heading" class="border-t border-gray-200 py-8 sm:py-10">
+        <h2 id="about-heading" class="text-2xl font-bold text-gray-900">About</h2>
+        <p class="mt-5 max-w-2xl text-base leading-8 text-gray-600 sm:text-lg">{cv.summary}</p>
       </section>
 
-      <section class="mt-8 grid grid-cols-1 gap-8 md:grid-cols-2">
-        <div class="rounded-2xl border border-gray-200 bg-gray-50 p-6">
-          <h2 class="text-2xl font-bold text-gray-900">Education</h2>
-          <p class="mt-4 text-base leading-7 text-gray-600">待补充。</p>
-        </div>
-        <div class="rounded-2xl border border-gray-200 bg-gray-50 p-6">
-          <h2 class="text-2xl font-bold text-gray-900">Experience</h2>
-          <p class="mt-4 text-base leading-7 text-gray-600">待补充。</p>
-        </div>
+      <section aria-labelledby="education-heading" class="border-t border-gray-200 py-8 sm:py-10">
+        <h2 id="education-heading" class="text-2xl font-bold text-gray-900">Education</h2>
+        {cv.education.map((item) => (
+          <article class="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-between sm:gap-8">
+            <div>
+              <h3 class="text-lg font-semibold text-gray-900">{item.institution}</h3>
+              <p class="mt-2 text-base leading-7 text-gray-600">{item.position}, {item.department}</p>
+            </div>
+            <p class="shrink-0 font-mono text-sm leading-7 text-gray-500">{item.period}</p>
+          </article>
+        ))}
       </section>
+
+      <footer class="mt-6 border-t border-gray-200 py-6 text-sm text-gray-500">
+        <p>{cv.name} · {cv.institution}</p>
+      </footer>
     </main>
     <ThemeToggle />
   </body>

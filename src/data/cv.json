@@ -1,5 +1,11 @@
 {
-  "summary": "这里保留 CV 页面骨架。后续可以补充教育经历、项目经历、研究方向和联系方式。",
+  "name": "Junkai Qiu",
+  "position": "PhD Student",
+  "department": "School of Mathematical Sciences",
+  "institution": "Dalian University of Technology",
+  "location": "Dalian, Liaoning, China",
+  "email": "qjk@mail.dlut.edu.cn",
+  "summary": "I am a PhD student in the School of Mathematical Sciences at Dalian University of Technology in Dalian, China.",
   "highlights": [
     "Mathematics",
     "Approximation Theory",
@@ -7,7 +13,14 @@
     "AI Tools",
     "Local Utilities"
   ],
-  "education": [],
+  "education": [
+    {
+      "institution": "Dalian University of Technology",
+      "department": "School of Mathematical Sciences",
+      "position": "PhD student",
+      "period": "2024 – present"
+    }
+  ],
   "experience": [],
   "links": [
     {

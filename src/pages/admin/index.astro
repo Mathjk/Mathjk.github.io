@@ -1,0 +1,397 @@
+---
+import { repositoryUrl, tokenUrl } from "../../lib/admin-github";
+---
+
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="referrer" content="no-referrer" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src https://api.github.com; object-src 'none'; base-uri 'none'; form-action 'none'"
+    />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>主页管理 · Mathjk</title>
+  </head>
+  <body>
+    <header>
+      <div class="bar">
+        <a class="home" href="/">Mathjk 主页</a>
+        <a href={repositoryUrl} target="_blank" rel="noopener noreferrer">GitHub 仓库</a>
+      </div>
+    </header>
+
+    <main>
+      <div class="intro">
+        <h1>主页管理</h1>
+        <p>管理精选资源和笔记。保存后会提交到 GitHub，触发主页自动发布。</p>
+      </div>
+
+      <section class="panel login-panel" id="admin-login" aria-labelledby="login-heading">
+        <h2 id="login-heading">连接 GitHub</h2>
+        <form id="admin-login-form" method="post">
+          <label class="field">
+            GitHub 细粒度访问令牌
+            <input id="admin-token" type="password" placeholder="github_pat_…" autocomplete="off" required />
+          </label>
+          <button type="submit" id="admin-connect" class="primary">登录后台</button>
+          <p id="admin-login-status" class="message" role="status"></p>
+        </form>
+        <details>
+          <summary>首次使用</summary>
+          <ol>
+            <li><a href={tokenUrl} target="_blank" rel="noopener noreferrer">在 GitHub 创建专用令牌</a>。</li>
+            <li>在 <strong>Only select repositories</strong> 中选择 <strong>Mathjk.github.io</strong>。</li>
+            <li>确认 <strong>Contents</strong> 权限为 <strong>Read and write</strong>，生成后把令牌填到上方。</li>
+          </ol>
+          <p class="muted">令牌仅用于当前页面，并直接发送给 GitHub。</p>
+        </details>
+      </section>
+
+      <section id="admin-workspace" hidden aria-label="内容编辑">
+        <fieldset id="admin-workspace-fields">
+          <div class="workspace-bar">
+            <nav class="tabs" aria-label="管理内容">
+              <button type="button" id="admin-resource-tab" aria-controls="admin-resource-panel" aria-pressed="true">精选资源</button>
+              <button type="button" id="admin-note-tab" aria-controls="admin-note-panel" aria-pressed="false">笔记</button>
+            </nav>
+            <div class="account">
+              <span id="admin-account"></span>
+              <button type="button" id="admin-reload">重新读取</button>
+              <button type="button" id="admin-disconnect">退出</button>
+            </div>
+          </div>
+
+          <section class="panel" id="admin-resource-panel" aria-label="编辑资源">
+            <label class="field picker">
+              资源分组
+              <select id="admin-resource-picker"></select>
+            </label>
+            <form id="admin-resource-form" method="post">
+              <label class="field">
+                分组名称
+                <input name="name" required />
+              </label>
+              <label class="field">
+                简介
+                <textarea name="description" rows="2"></textarea>
+              </label>
+              <label class="field">
+                筛选标签
+                <input name="tags" placeholder="例如 UI、AI" />
+              </label>
+              <div class="links-heading">
+                <h2>资源链接</h2>
+                <button type="button" id="admin-add-link">添加链接</button>
+              </div>
+              <div id="admin-links" class="link-list"></div>
+              <div class="actions">
+                <button class="primary" type="submit">保存并发布</button>
+                <button class="danger" type="button" id="admin-delete-resource" hidden>删除分组</button>
+              </div>
+            </form>
+          </section>
+
+          <section class="panel" id="admin-note-panel" hidden aria-label="编辑笔记">
+            <label class="field picker">
+              笔记
+              <select id="admin-note-picker"></select>
+            </label>
+            <form id="admin-note-form" method="post">
+              <label class="field">
+                标题
+                <input name="title" required />
+              </label>
+              <div class="pair">
+                <label class="field">
+                  网址名称
+                  <input name="slug" required placeholder="例如 linear-algebra" />
+                </label>
+                <label class="field">
+                  日期
+                  <input name="date" type="date" required />
+                </label>
+              </div>
+              <label class="field">
+                摘要
+                <textarea name="summary" rows="2"></textarea>
+              </label>
+              <label class="field">
+                标签
+                <input name="tags" placeholder="例如 Math、Notes" />
+              </label>
+              <label class="field">
+                正文（Markdown）
+                <textarea name="body" rows="12" class="markdown"></textarea>
+              </label>
+              <div class="actions">
+                <button class="primary" type="submit">保存并发布</button>
+              </div>
+            </form>
+          </section>
+        </fieldset>
+        <div class="feedback">
+          <p id="admin-status" class="message" role="status"></p>
+          <a id="admin-commit" target="_blank" rel="noopener noreferrer" hidden>查看提交</a>
+        </div>
+      </section>
+    </main>
+
+    <template id="admin-link-template">
+      <div class="link-row" data-link-row>
+        <label class="field">
+          名称
+          <input data-link-label />
+        </label>
+        <label class="field">
+          网址
+          <input data-link-url type="url" placeholder="https://…" />
+        </label>
+        <button type="button" data-remove-link>移除链接</button>
+      </div>
+    </template>
+    <script src="../../scripts/admin.ts"></script>
+  </body>
+</html>
+
+<style>
+  :global(*) {
+    box-sizing: border-box;
+  }
+
+  :global(body) {
+    margin: 0;
+    color: #182233;
+    background: #f3f5f8;
+    font: 16px/1.6 system-ui, "Microsoft YaHei", sans-serif;
+  }
+
+  [hidden] {
+    display: none !important;
+  }
+
+  header {
+    border-bottom: 1px solid #dbe2ec;
+    background: #fff;
+  }
+
+  .bar, main {
+    max-width: 58rem;
+    margin: 0 auto;
+    padding-inline: 1.25rem;
+  }
+
+  .bar, .workspace-bar, .account, .tabs, .links-heading, .actions, .feedback {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: .625rem;
+  }
+
+  .bar, .workspace-bar, .links-heading {
+    justify-content: space-between;
+  }
+
+  .bar {
+    min-height: 3.75rem;
+    font-size: .9rem;
+  }
+
+  .home {
+    color: inherit;
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  main {
+    padding-block: clamp(2rem, 6vw, 4.5rem);
+  }
+
+  .intro {
+    margin-bottom: 1.5rem;
+  }
+
+  h1, h2, p {
+    margin: 0;
+  }
+
+  h1 {
+    font-size: clamp(2rem, 5vw, 3rem);
+    line-height: 1.2;
+  }
+
+  h2 {
+    font-size: 1.125rem;
+    line-height: 1.35;
+  }
+
+  .intro p, .muted {
+    color: #4e5b6f;
+    margin-top: .6rem;
+  }
+
+  a {
+    color: #174bc4;
+    text-underline-offset: .15em;
+  }
+
+  .panel {
+    padding: clamp(1.25rem, 4vw, 2rem);
+    border: 1px solid #dbe2ec;
+    border-radius: 1rem;
+    background: #fff;
+    box-shadow: 0 8px 24px #18223308;
+  }
+
+  .login-panel {
+    max-width: 33rem;
+  }
+
+  .login-panel h2, .workspace-bar {
+    margin-bottom: 1rem;
+  }
+
+  fieldset {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    min-width: 0;
+  }
+
+  form, .field, .link-list {
+    display: grid;
+    gap: .4rem;
+  }
+
+  form, .link-list {
+    gap: .95rem;
+  }
+
+  .field {
+    min-width: 0;
+    font-size: .9rem;
+    font-weight: 600;
+  }
+
+  .picker {
+    background: #f3f6fc;
+    padding: .9rem;
+    border-radius: .75rem;
+    margin-bottom: 1.25rem;
+  }
+
+  input, textarea, select, button {
+    font: inherit;
+    border: 1px solid #b9c5d5;
+    border-radius: .55rem;
+  }
+
+  input, textarea, select {
+    width: 100%;
+    min-width: 0;
+    padding: .55rem .7rem;
+    color: inherit;
+    background: #fff;
+    font-weight: 400;
+  }
+
+  textarea {
+    resize: vertical;
+  }
+
+  input[readonly] {
+    background: #f4f6f9;
+  }
+
+  button {
+    padding: .45rem .85rem;
+    font-size: .875rem;
+    font-weight: 650;
+    color: #24344e;
+    background: #fff;
+    cursor: pointer;
+  }
+
+  button:disabled {
+    opacity: .62;
+    cursor: wait;
+  }
+
+  button:hover:not(:disabled) {
+    border-color: #315dc2;
+  }
+
+  :is(a, button, input, select, summary, textarea):focus-visible {
+    outline: 2px solid #225bdd;
+    outline-offset: 2px;
+  }
+
+  .primary, button[aria-pressed="true"] {
+    border-color: #2256cc;
+    background: #2256cc;
+    color: #fff;
+    justify-self: start;
+  }
+
+  .danger, .message[data-error="true"] {
+    color: #aa2133;
+  }
+
+  details {
+    border-top: 1px solid #e4eaf3;
+    margin-top: 1.25rem;
+    padding-top: 1rem;
+    font-size: .9rem;
+  }
+
+  summary {
+    cursor: pointer;
+    font-weight: 650;
+  }
+
+  ol {
+    margin-block: .65rem 0;
+    padding-left: 1.4rem;
+  }
+
+  .account, .feedback {
+    font-size: .875rem;
+    color: #4e5c71;
+  }
+
+  .pair, .link-row {
+    display: grid;
+    gap: .75rem;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .link-row {
+    align-items: end;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) auto;
+  }
+
+  .markdown {
+    font-family: ui-monospace, "Cascadia Code", monospace;
+  }
+
+  .feedback {
+    margin-top: .75rem;
+  }
+
+  .message:empty {
+    display: none;
+  }
+
+  @media (max-width: 36rem) {
+    .pair, .link-row {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .link-row button {
+      justify-self: start;
+    }
+  }
+</style>

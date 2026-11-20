@@ -68,9 +68,6 @@ export const siteConfig = {
     title: "笔记",
     description: "数学、论文、工具和主页迭代的短笔记。后续可以直接新增 Markdown 文件。",
   },
-  localEditor: {
-    note: "本地编辑中心只在 127.0.0.1 桥接服务解锁后工作。线上发布时保持只读。",
-  },
   experience: [],
   education: [],
 };

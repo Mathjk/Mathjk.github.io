@@ -5,7 +5,6 @@ const hasProjects = siteConfig.projects && siteConfig.projects.length > 0;
 const hasExperience = siteConfig.experience && siteConfig.experience.length > 0;
 const hasEducation = siteConfig.education && siteConfig.education.length > 0;
 const hasMoments = siteConfig.moments && siteConfig.moments.counters.length > 0;
-const hasWorkbench = Boolean(siteConfig.localWorkbench);
 const hasTimeline = siteConfig.timeline && siteConfig.timeline.length > 0;
 const hasPublicProjects = siteConfig.publicProjects && siteConfig.publicProjects.length > 0;
 ---
@@ -24,18 +23,6 @@ const hasPublicProjects = siteConfig.publicProjects && siteConfig.publicProjects
               class="text-gray-700 hover:text-black transition-colors font-medium"
             >
               时光
-            </a>
-          </li>
-        )
-      }
-      {
-        hasWorkbench && (
-          <li>
-            <a
-              href="#workbench"
-              class="text-gray-700 hover:text-black transition-colors font-medium"
-            >
-              本地工具台
             </a>
           </li>
         )

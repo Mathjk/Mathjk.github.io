@@ -117,5 +117,35 @@
       "Search",
       "Knowledge"
     ]
+  },
+  {
+    "id": "ui-design",
+    "name": "UI",
+    "description": "浏览可交互的 UI 组件、页面和动效示例，复制对应的提示词用于开发。",
+    "links": [
+      {
+        "label": "wd-ui",
+        "href": "https://itxd.github.io/wd-ui/"
+      },
+      {
+        "label": "Lucian UX/UI Prompt",
+        "href": "https://lucianlabs.dev/uxui-prompt/"
+      },
+      {
+        "label": "Motion Prompt",
+        "href": "https://showheyohtaki.github.io/motion-prompt/?lang=en"
+      },
+      {
+        "label": "Superdesign Prompts",
+        "href": "https://superdesign.dev/library"
+      },
+      {
+        "label": "Web Motion Showcase",
+        "href": "https://holynova.github.io/web-motion-showcase/"
+      }
+    ],
+    "skills": [
+      "UI"
+    ]
   }
 ]
